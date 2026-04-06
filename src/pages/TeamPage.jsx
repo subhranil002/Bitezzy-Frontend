@@ -7,7 +7,7 @@ const teamMembers = [
   {
     name: "Subhranil Chakraborty",
     role: "The Simmering Strategist",
-    image: "https://res.cloudinary.com/dmtmecmpn/image/upload/ar_1:1,c_auto,g_auto,w_500/v1772466343/Subhranil_pei11c.jpg",
+    image: "https://res.cloudinary.com/dpoqek1ce/image/upload/ar_1:1,c_auto,g_auto,w_500/v1772466343/Subhranil_pei11c.jpg",
     linkedin_url: "https://www.linkedin.com/in/subhranilchakraborty",
     github_url: "https://www.github.com/subhranil002",
     bio: "Master of long-term planning and slow-cooked perfection. Subhranil ensures every project boils down to flawless execution and sustainable architecture.",
@@ -16,7 +16,7 @@ const teamMembers = [
   {
     name: "Wasiq Afnan Ansari",
     role: "Sultan of the Sauce",
-    image: "https://res.cloudinary.com/dmtmecmpn/image/upload/ar_1:1,c_auto,g_auto,w_500/v1772469945/Wasiq_n7vl3o.jpg",
+    image: "https://res.cloudinary.com/dpoqek1ce/image/upload/ar_1:1,c_auto,g_auto,w_500/v1772469945/Wasiq_n7vl3o.jpg",
     linkedin_url: "https://www.linkedin.com/in/wasiq-afnan-ansari-cs2021",
     github_url: "https://www.github.com/wasiqAfnan",
     bio: "Adding that extra kick to everything we build. Wasiq blends code and creativity to make sure our products always leave a lasting, flavorful impression.",
@@ -25,7 +25,7 @@ const teamMembers = [
   {
     name: "Trisit Chanda",
     role: "Keeper of the Secret Sauce",
-    image: "https://res.cloudinary.com/dar5gpc6v/image/upload/v1773255493/myImage.jpg",
+    image: "https://res.cloudinary.com/dpoqek1ce/image/upload/v1775483067/myImage_s1uofe.jpg",
     linkedin_url: "https://www.linkedin.com/in/trisit-chanda-2a2548260",
     github_url: "https://www.github.com/Trisitchanda",
     bio: "Guarding the architecture and core algorithms. Trisit manages the hidden ingredients and robust logic that make our applications truly unique.",
@@ -34,7 +34,7 @@ const teamMembers = [
   {
     name: "Soudipta Sarkar",
     role: "Future Flavor Forecaster",
-    image: "https://res.cloudinary.com/dmtmecmpn/image/upload/ar_1:1,c_auto,g_auto,w_500/v1772470790/soudipta_zdndet.jpg",
+    image: "https://res.cloudinary.com/dpoqek1ce/image/upload/ar_1:1,c_auto,g_auto,w_500/v1772470790/soudipta_zdndet.jpg",
     linkedin_url: "https://www.linkedin.com/in/soudipta-sarkar-19a398312",
     github_url: "https://www.github.com/soudipta6010",
     bio: "Always looking ahead to what’s next. Soudipta anticipates emerging trends, explores innovative ideas, and helps shape features that keep our products fresh, forward-thinking, and ready for the future.",
@@ -43,7 +43,7 @@ const teamMembers = [
   {
     name: "Nabanita Nath",
     role: "Garnish Wizard",
-    image: "https://res.cloudinary.com/dmtmecmpn/image/upload/ar_1:1,c_auto,g_auto,w_500/v1772904668/NabanitaNath_l8i9bg.jpg",
+    image: "https://res.cloudinary.com/dpoqek1ce/image/upload/ar_1:1,c_auto,g_auto,w_500/v1772904668/NabanitaNath_l8i9bg.jpg",
     linkedin_url: "https://www.linkedin.com/in/nabanita-nath-747837225",
     github_url: "https://www.github.com/Nabanita315",
     bio: "Master of aesthetics and final touches. Nabanita turns functional interfaces into visual masterpieces, making sure every pixel looks delectable.",

@@ -11,6 +11,7 @@ import {
   FaSearch,
   FaSignOutAlt,
   FaTachometerAlt,
+  FaTimes,
   FaUser,
   FaUsers,
   FaUtensils,
@@ -145,7 +146,7 @@ export default function Navbar({ children }) {
     <div className="drawer bg-gray-50/30">
       <input id="navbar-drawer" type="checkbox" className="drawer-toggle" />
 
-      <div className="drawer-content flex flex-col min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+      <div className="drawer-content flex flex-col min-h-screen bg-linear-to-br from-orange-50 to-amber-50">
         <header className="sticky top-4 z-50 px-4 md:px-8 w-full max-w-[1400px] mx-auto pointer-events-none transition-all duration-300">
           <div className="navbar pointer-events-auto min-h-16 md:min-h-20 bg-white/70 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(249,115,22,0.06)] rounded-3xl px-3 transition-all">
             {/* Left: Hamburger & Elegant Branding */}
@@ -317,20 +318,31 @@ export default function Navbar({ children }) {
         {/* Floating Island Sidebar */}
         <aside className="menu p-0 w-80 min-h-full bg-white/95 backdrop-blur-3xl border-r border-orange-100 flex flex-col pt-8 pb-6 px-4 text-base-content">
           {/* Brand area */}
-          <div className="flex items-center gap-4 mb-8 px-2">
-            <div className="avatar">
-              <div className="w-12 h-12 rounded-4xl shadow-md border border-orange-100">
-                <img src={LOGO_URL} alt="Bitezzy" />
+          <div className="flex items-start justify-between mb-8 px-2">
+            <div className="flex items-center gap-4">
+              <div className="avatar">
+                <div className="w-12 h-12 rounded-4xl shadow-md border border-orange-100">
+                  <img src={LOGO_URL} alt="Bitezzy" />
+                </div>
+              </div>
+              <div>
+                <h2 className="font-black text-2xl tracking-tight text-gray-900">
+                  Bitezzy
+                </h2>
+                <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">
+                  Discover. Cook. Impress. Repeat
+                </p>
               </div>
             </div>
-            <div>
-              <h2 className="font-black text-2xl tracking-tight text-gray-900">
-                Bitezzy
-              </h2>
-              <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">
-                Discover. Cook. Impress. Repeat
-              </p>
-            </div>
+            
+            {/* Close Button Component */}
+            <label
+              htmlFor="navbar-drawer"
+              aria-label="close sidebar"
+              className="btn btn-ghost btn-circle btn-sm text-gray-400 hover:text-red-500 hover:bg-red-50 lg:hidden transition-colors"
+            >
+              <FaTimes className="w-5 h-5" />
+            </label>
           </div>
 
           {/* Mobile Search - Visible only on small screens */}

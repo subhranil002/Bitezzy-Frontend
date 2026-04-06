@@ -171,12 +171,12 @@ function RecipeDetail() {
     },
     ...(recipe?.nutrition?.totalCalories
       ? [
-          {
-            icon: <FaFire />,
-            label: "Calories",
-            value: recipe.nutrition.totalCalories,
-          },
-        ]
+        {
+          icon: <FaFire />,
+          label: "Calories",
+          value: recipe.nutrition.totalCalories,
+        },
+      ]
       : []),
   ];
 
@@ -294,11 +294,10 @@ function RecipeDetail() {
 
               <button
                 onClick={toggleFav}
-                className={`absolute top-4 right-4 btn btn-circle ${
-                  isFav
-                    ? "bg-rose-500 text-white border-none"
-                    : "bg-white/80 text-gray-700 border-none hover:bg-white"
-                }`}
+                className={`absolute top-4 right-4 btn btn-circle ${isFav
+                  ? "bg-rose-500 text-white border-none"
+                  : "bg-white/80 text-gray-700 border-none hover:bg-white"
+                  }`}
               >
                 <FaHeart className="w-5 h-5" />
               </button>
@@ -434,6 +433,47 @@ function RecipeDetail() {
                   )}
                 </div>
 
+                {recipe?.nutrition && (
+                  <div className="collapse collapse-arrow bg-base-100 shadow-md border border-orange-100">
+                    <input type="checkbox" />
+                    <div className="collapse-title text-lg font-bold text-gray-800">
+                      Nutritional Information
+                    </div>
+                    <div className="collapse-content">
+                      <div className="overflow-x-auto">
+                        <table className="table table-zebra w-full">
+                          <tbody>
+                            <tr className="hover">
+                              <td className="font-medium text-gray-800">Calories</td>
+                              <td className="text-right text-gray-600">{recipe?.nutrition?.totalCalories || '-'} kcal</td>
+                            </tr>
+                            <tr className="hover">
+                              <td className="font-medium text-gray-800">Carbohydrates</td>
+                              <td className="text-right text-gray-600">{recipe?.nutrition?.carbs || '-'} g</td>
+                            </tr>
+                            <tr className="hover">
+                              <td className="font-medium text-gray-800">Protein</td>
+                              <td className="text-right text-gray-600">{recipe?.nutrition?.protein || '-'} g</td>
+                            </tr>
+                            <tr className="hover">
+                              <td className="font-medium text-gray-800">Fat</td>
+                              <td className="text-right text-gray-600">{recipe?.nutrition?.fat || '-'} g</td>
+                            </tr>
+                            <tr className="hover">
+                              <td className="font-medium text-gray-800">Fiber</td>
+                              <td className="text-right text-gray-600">{recipe?.nutrition?.fiber || '-'} g</td>
+                            </tr>
+                            <tr className="hover">
+                              <td className="font-medium text-gray-800">Sugar</td>
+                              <td className="text-right text-gray-600">{recipe?.nutrition?.sugar || '-'} g</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Ingredients */}
                 <div className="print-only-steps">
                   <div className="card bg-base-100 shadow-lg border border-orange-100">
@@ -464,9 +504,8 @@ function RecipeDetail() {
                               return (
                                 <tr
                                   key={index}
-                                  className={`transition-all duration-300 ${
-                                    isChecked ? "opacity-50" : ""
-                                  }`}
+                                  className={`transition-all duration-300 ${isChecked ? "opacity-50" : ""
+                                    }`}
                                 >
                                   <td>
                                     <input
@@ -480,31 +519,28 @@ function RecipeDetail() {
                                   </td>
 
                                   <td
-                                    className={`font-medium ${
-                                      isChecked
-                                        ? "line-through text-gray-400"
-                                        : "text-gray-800"
-                                    }`}
+                                    className={`font-medium ${isChecked
+                                      ? "line-through text-gray-400"
+                                      : "text-gray-800"
+                                      }`}
                                   >
                                     {ing.name}
                                   </td>
 
                                   <td
-                                    className={`font-medium ${
-                                      isChecked
-                                        ? "line-through text-gray-400"
-                                        : "text-gray-600"
-                                    }`}
+                                    className={`font-medium ${isChecked
+                                      ? "line-through text-gray-400"
+                                      : "text-gray-600"
+                                      }`}
                                   >
                                     {ing.quantity} {ing.unit}
                                   </td>
 
                                   <td
-                                    className={`text-right ${
-                                      isChecked
-                                        ? "line-through text-gray-300"
-                                        : "text-gray-500"
-                                    }`}
+                                    className={`text-right ${isChecked
+                                      ? "line-through text-gray-300"
+                                      : "text-gray-500"
+                                      }`}
                                   >
                                     ₹{(Number(ing.marketPrice) || 0).toFixed(2)}
                                   </td>
@@ -556,21 +592,19 @@ function RecipeDetail() {
               <div className="space-y-6">
                 {/* I MADE IT WIDGET */}
                 <div
-                  className={`card shadow-lg transition-all duration-500 border-2 ${
-                    madeIt
-                      ? "bg-emerald-50 border-emerald-400 shadow-emerald-100"
-                      : "bg-base-100 border-orange-100 hover:border-orange-200"
-                  }`}
+                  className={`card shadow-lg transition-all duration-500 border-2 ${madeIt
+                    ? "bg-emerald-50 border-emerald-400 shadow-emerald-100"
+                    : "bg-base-100 border-orange-100 hover:border-orange-200"
+                    }`}
                 >
                   <div className="card-body p-6 text-center">
                     <div className="flex flex-col items-center mb-4">
                       <div className="flex items-baseline gap-1">
                         <span
-                          className={`text-4xl font-black transition-all duration-300 ${
-                            madeIt
-                              ? "text-emerald-600 scale-110"
-                              : "text-gray-800"
-                          }`}
+                          className={`text-4xl font-black transition-all duration-300 ${madeIt
+                            ? "text-emerald-600 scale-110"
+                            : "text-gray-800"
+                            }`}
                         >
                           {madeItCount}
                         </span>
@@ -582,26 +616,23 @@ function RecipeDetail() {
 
                     <button
                       onClick={handleMadeItToggle}
-                      className={`btn w-full text-sm font-semibold rounded-xl shadow-md transition-all duration-300 group ${
-                        madeIt
-                          ? "bg-emerald-500 hover:bg-emerald-600 border-none text-white ring-4 ring-emerald-100"
-                          : "bg-linear-to-r from-orange-400 to-red-400 border-none text-white hover:shadow-orange-200 hover:-translate-y-1"
-                      }`}
+                      className={`btn w-full text-sm font-semibold rounded-xl shadow-md transition-all duration-300 group ${madeIt
+                        ? "bg-emerald-500 hover:bg-emerald-600 border-none text-white ring-4 ring-emerald-100"
+                        : "bg-linear-to-r from-orange-400 to-red-400 border-none text-white hover:shadow-orange-200 hover:-translate-y-1"
+                        }`}
                     >
                       <FaCheckCircle
-                        className={`w-5 h-5 transition-transform duration-300 ${
-                          madeIt ? "scale-125" : "group-hover:scale-110"
-                        }`}
+                        className={`w-5 h-5 transition-transform duration-300 ${madeIt ? "scale-125" : "group-hover:scale-110"
+                          }`}
                       />
                       {madeIt ? "I Made It!" : "I Made This"}
                     </button>
 
                     <div
-                      className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                        madeIt
-                          ? "max-h-20 opacity-100 mt-3"
-                          : "max-h-0 opacity-0"
-                      }`}
+                      className={`transition-all duration-500 ease-in-out overflow-hidden ${madeIt
+                        ? "max-h-20 opacity-100 mt-3"
+                        : "max-h-0 opacity-0"
+                        }`}
                     >
                       <p className="text-sm font-semibold text-emerald-600 bg-white/50 py-2 px-3 rounded-lg inline-flex items-center gap-2">
                         <span>🎉</span> Delicious choice!
@@ -630,11 +661,10 @@ function RecipeDetail() {
                       {Array.from({ length: 5 }).map((_, i) => (
                         <FaStar
                           key={i}
-                          className={`text-2xl transition-colors duration-200 ${
-                            i < Math.round(stats.averageRating)
-                              ? "text-yellow-400 drop-shadow-sm"
-                              : "text-gray-200"
-                          }`}
+                          className={`text-2xl transition-colors duration-200 ${i < Math.round(stats.averageRating)
+                            ? "text-yellow-400 drop-shadow-sm"
+                            : "text-gray-200"
+                            }`}
                         />
                       ))}
                     </div>
@@ -729,11 +759,10 @@ function RecipeDetail() {
                   <FaStar
                     key={i}
                     onClick={() => setRating(i + 1)}
-                    className={`text-3xl cursor-pointer transition-all duration-200 ${
-                      i < rating
-                        ? "text-yellow-400 drop-shadow-sm scale-110"
-                        : "text-gray-100 opacity-90 hover:text-yellow-400 hover:scale-105"
-                    }`}
+                    className={`text-3xl cursor-pointer transition-all duration-200 ${i < rating
+                      ? "text-yellow-400 drop-shadow-sm scale-110"
+                      : "text-gray-100 opacity-90 hover:text-yellow-400 hover:scale-105"
+                      }`}
                   />
                 ))}
               </div>
@@ -806,11 +835,10 @@ function RecipeDetail() {
                     <FaStar
                       key={i}
                       onClick={() => setChefRating(i + 1)}
-                      className={`text-4xl cursor-pointer transition-transform duration-200 hover:scale-110 ${
-                        i < chefRating
-                          ? "opacity-100 drop-shadow-sm"
-                          : "opacity-30 hover:opacity-60"
-                      }`}
+                      className={`text-4xl cursor-pointer transition-transform duration-200 hover:scale-110 ${i < chefRating
+                        ? "opacity-100 drop-shadow-sm"
+                        : "opacity-30 hover:opacity-60"
+                        }`}
                     />
                   ))}
                 </div>

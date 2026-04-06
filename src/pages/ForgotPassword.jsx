@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 
 import forgotPasswordApi from "../apis/user/forgotPasswordApi";
 import { FloatingIcons } from "../components/FloatingFoodIcons";
-import { PASSWORD_REGEX } from "../constants";
+import { EMAIL_REGEX } from "../constants";
 
 export default function ForgotPassword() {
   const {
@@ -75,7 +75,7 @@ export default function ForgotPassword() {
               {...register("email", {
                 required: "Email is required",
                 pattern: {
-                  value: PASSWORD_REGEX,
+                  value: EMAIL_REGEX,
                   message: "Invalid email address",
                 },
               })}
