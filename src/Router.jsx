@@ -22,6 +22,7 @@ import SignUp from "./pages/Signup";
 import TeamPage from "./pages/TeamPage";
 import Favorites from "./pages/User/Favourites";
 import { getProfile } from "./redux/slices/authSlice";
+import EditRecipe from "./pages/Chef/EditRecipe";
 
 function Router() {
   const dispatch = useDispatch();
@@ -63,6 +64,7 @@ function Router() {
       </Route>
       <Route element={<ChefOnly />}>
         <Route path="/recipe/add" element={<AddRecipe />} />
+        <Route path="/recipe/edit/:id" element={<EditRecipe />} />
         <Route path="/dashboard" element={<ChefDashboard />} />
       </Route>
       <Route path="*" element={<NotFound />} />

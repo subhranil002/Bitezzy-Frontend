@@ -10,6 +10,8 @@ import {
   FaStar,
   FaTimes,
   FaUsers,
+  FaEdit,
+  FaTrash,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -49,11 +51,17 @@ function RecipeDetail() {
   const [chefRating, setChefRating] = useState(0);
   const [chefReviewText, setChefReviewText] = useState("");
 
+  // --- Delete Modal State ---
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const [checkedIngredients, setCheckedIngredients] = useState([]);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const debounceTimer = useRef(null);
+
+  // Determine if the logged-in user is the author of the recipe
+  const isAuthor = isLoggedIn && userData?._id === chef?._id;
 
   useEffect(() => {
     if (!id) {
@@ -149,6 +157,14 @@ function RecipeDetail() {
     setShowChefReview(false);
     setChefRating(0);
     setChefReviewText("");
+  };
+
+  const handleDeleteRecipe = () => {
+    // TODO: Dispatch your delete action or API call here
+    console.log("Deleting recipe:", recipe._id);
+    toast.success("Recipe deleted successfully");
+    setShowDeleteModal(false);
+    navigate("/");
   };
 
   if (!recipe) return <Loading />;
@@ -291,6 +307,26 @@ function RecipeDetail() {
                 alt={recipe.title}
                 className="w-full h-[280px] sm:h-[400px] lg:h-[500px] object-cover transition-transform duration-700 hover:scale-105"
               />
+
+              {/* Author Actions (Edit / Delete) */}
+              {isAuthor && (
+                <div className="absolute top-4 left-4 z-20 flex gap-2">
+                  <Link
+                    to={`/recipe/edit/${recipe._id}`}
+                    className="btn btn-circle bg-white/80 text-blue-600 border-none hover:bg-white shadow-md transition-all hover:scale-105"
+                    title="Edit Recipe"
+                  >
+                    <FaEdit className="w-5 h-5" />
+                  </Link>
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="btn btn-circle bg-white/80 text-red-600 border-none hover:bg-white shadow-md transition-all hover:scale-105"
+                    title="Delete Recipe"
+                  >
+                    <FaTrash className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
 
               <button
                 onClick={toggleFav}
@@ -866,6 +902,37 @@ function RecipeDetail() {
                   className="btn flex-1 bg-linear-to-r from-orange-500 to-red-500 border-none text-white rounded-xl disabled:bg-gray-200 disabled:text-gray-400"
                 >
                   Submit Review
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- DELETE CONFIRMATION MODAL --- */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md">
+          <div className="relative w-full max-w-sm rounded-3xl overflow-hidden border border-red-100 bg-white shadow-2xl animate-fadeIn">
+            <div className="p-8 text-center space-y-4">
+              <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                <FaTrash className="w-7 h-7" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-800">Delete Recipe?</h3>
+              <p className="text-gray-500 text-sm">
+                Are you sure you want to delete this recipe? This action cannot be undone.
+              </p>
+              <div className="flex gap-3 pt-6">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="btn flex-1 btn-ghost rounded-xl border border-gray-200 text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteRecipe}
+                  className="btn flex-1 bg-red-500 hover:bg-red-600 border-none text-white rounded-xl"
+                >
+                  Delete
                 </button>
               </div>
             </div>

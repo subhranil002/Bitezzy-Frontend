@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import {
   FaDollarSign,
@@ -64,6 +64,9 @@ function Search() {
   const [meta, setMeta] = useState({});
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  
+  // Track initial render to prevent unwanted API calls on mount
+  const isFirstRender = useRef(true);
 
   const {
     register,
@@ -167,6 +170,7 @@ function Search() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Debounce Text Query Input
   useEffect(() => {
     const delay = setTimeout(() => {
       const values = getValues();
@@ -174,6 +178,23 @@ function Search() {
     }, 800);
     return () => clearTimeout(delay);
   }, [watchedValues.query]);
+
+  // NEW: Debounce Dietary Preferences (Desktop Only)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    // Check if user is on a desktop (Tailwind 'xl' breakpoint is 1280px)
+    if (typeof window !== "undefined" && window.innerWidth >= 1280) {
+      const delay = setTimeout(() => {
+        searchRecipes({ ...getValues(), page: 1 });
+      }, 600); // 600ms debounce prevents API spam
+
+      return () => clearTimeout(delay); // Clears the timer if the user clicks again before 600ms
+    }
+  }, [watchedValues.dietaryPreferences]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;

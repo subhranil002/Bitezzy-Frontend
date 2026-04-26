@@ -77,7 +77,7 @@ const homeSlice = createSlice({
         state.freshAndNew = action.payload.data;
       })
       .addCase(getRecommended.fulfilled, (state, action) => {
-        state.recommendedForYou = action.payload.data;
+        state.recommendedForYou = action.payload?.data;
       })
       .addCase(getQuickAndEasy.fulfilled, (state, action) => {
         state.quickAndEasy = action.payload.data;

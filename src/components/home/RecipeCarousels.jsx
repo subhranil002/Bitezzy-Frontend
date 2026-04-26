@@ -62,7 +62,7 @@ export default function RecipeCarousels() {
       if (premiumPicks.length === 0) await dispatch(getPremium());
 
       // Recommended section loads only for logged-in users
-      if (isLoggedIn && recommendedForYou.length === 0)
+      if (isLoggedIn && recommendedForYou?.length === 0)
         await dispatch(getRecommended());
 
       setLoading(false);
