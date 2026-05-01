@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 
 import authSlice from "./slices/authSlice";
+import chatSlice from "./slices/chatSlice";
 import homeSlice from "./slices/homeSlice";
 import recipeSlice from "./slices/recipeSlice";
 
@@ -9,6 +10,7 @@ const store = configureStore({
     auth: authSlice.reducer,
     home: homeSlice.reducer,
     recipe: recipeSlice.reducer,
+    chat: chatSlice.reducer,
   },
   devTools: import.meta.env.VITE_NODE_ENV === "development",
 });

@@ -5,44 +5,36 @@ import {
   FaLightbulb,
   FaPaperPlane,
   FaRobot,
+  FaTimes,
   FaUtensils,
 } from "react-icons/fa";
 import { LuCookingPot } from "react-icons/lu";
-import { useSelector } from "react-redux";
+import { RiChatNewFill } from "react-icons/ri";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
 
 import generateResponseApi from "../../apis/chatbot/generateResponseApi";
-
-const ChatbotPage = () => {
+import RecipeChatCard from "../../components/bitebot/RecipeChatCard";
+import {
+  addAssistantMessage,
+  addUserMessage,
+  clearChat,
+  getMessageHistory,
+  setCookingTipTool,
+  setRecipeSearchTool,
+} from "../../redux/slices/chatSlice";
+export default function Chat() {
   const { userData } = useSelector((state) => state.auth);
-  const navigate = useNavigate();
-
-  const [mode, setMode] = useState(null);
-  const [language, setLanguage] = useState("en");
-
-  const [messages, setMessages] = useState([
-    {
-      id: uuidv4(),
-      type: "assistant",
-      content:
-        "Hey! I'm BiteBot — your smart recipe assistant.\nTell me what you have in the fridge or what you're craving!",
-      recipes: [],
-      timestamp: new Date(),
-    },
-  ]);
-
+  const { quickSuggestions, messages, toolInUse } = useSelector(
+    (state) => state.chat,
+  );
   const [inputMessage, setInputMessage] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [language, setLanguage] = useState("en");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   const messagesEndRef = useRef(null);
-
-  const quickSuggestions = [
-    "Search indian chicken recipes",
-    "Find veg high protein recipes",
-    "Search italian recipes",
-    "Find recipes that I can make with eggs?",
-  ];
+  const dispatch = useDispatch();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -51,35 +43,28 @@ const ChatbotPage = () => {
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
     setIsLoading(true);
-
-    const userMessage = {
-      id: uuidv4(),
-      type: "user",
-      content: inputMessage,
-      timestamp: new Date(),
-      recipes: [],
-    };
-
+    const userInput = inputMessage.trim();
     setInputMessage("");
-    setMessages((prev) => [...prev, userMessage]);
-
-    // const languageNames = { en: "English", hi: "Hindi", bn: "Bengali" };
-    // const contextPrompt = `[Context: User wants ${mode === 'recipe' ? 'Recipes' : 'Cooking Tips'}. Please answer in ${languageNames[language]}.] ${userMessage.content}`;
-
-    const response = await generateResponseApi(userMessage.content);
-
-    const botMessage = {
-      id: uuidv4(),
-      type: "assistant",
-      content:
-        response?.data?.reply ??
-        "Hmm, I couldn't think of anything. Try again!",
-      recipes: response?.data?.recipes ?? [],
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, botMessage]);
-    setIsLoading(false);
+    dispatch(addUserMessage(userInput));
+    try {
+      const res = await generateResponseApi({
+        messages: getMessageHistory(messages, userInput),
+        toolInUse,
+        language,
+      });
+      dispatch(addAssistantMessage(res?.data));
+    } catch (error) {
+      console.log(error);
+      dispatch(
+        addAssistantMessage({
+          reply:
+            "Sorry, I'm having trouble understanding your request. Please try again later.",
+          recipes: [],
+        }),
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -121,9 +106,9 @@ const ChatbotPage = () => {
             <div className="flex flex-col">
               <h1 className="text-lg font-bold text-gray-900 tracking-tight leading-none flex items-center gap-1.5">
                 BiteBot
-                {/* <span className="text-[9px] font-extrabold tracking-wider bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-sm uppercase">
+                <span className="text-[9px] font-extrabold tracking-wider bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-sm uppercase">
                   Beta
-                </span> */}
+                </span>
               </h1>
             </div>
           </div>
@@ -131,6 +116,16 @@ const ChatbotPage = () => {
 
         {/* Right: Controls (Language Only) */}
         <div className="flex items-center gap-2 relative">
+          {/* New Chat Button */}
+          <button
+            onClick={() => dispatch(clearChat())}
+            className="btn btn-ghost hover:text-orange-600"
+            aria-label="New chat"
+          >
+            <RiChatNewFill className="w-4 h-4" />
+            <span className="hidden sm:inline-block">New chat</span>
+          </button>
+
           {/* Language Selector */}
           <div className="relative">
             <select
@@ -139,8 +134,8 @@ const ChatbotPage = () => {
               className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-xs font-semibold rounded-lg pl-3 pr-7 py-2 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400 cursor-pointer hover:bg-gray-100 transition-colors"
             >
               <option value="en">English</option>
-              <option value="hi">Hindi-Latin</option>
-              <option value="bn">Bengali-Latin</option>
+              <option value="hi">Hindi</option>
+              <option value="bn">Bengali</option>
             </select>
             <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]">
               <FaChevronDown />
@@ -152,25 +147,28 @@ const ChatbotPage = () => {
       {/* Chat Container */}
       <div className="flex-1 max-w-4xl mx-auto w-full px-4 pb-76 pt-4">
         <div className="space-y-6">
-          {messages.map((msg) => (
+          {messages?.map((msg) => (
             <div
               key={msg.id}
-              className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"
-                }`}
+              className={`flex ${
+                msg.role === "user" ? "justify-end" : "justify-start"
+              }`}
             >
               <div
-                className={`flex gap-3 max-w-[80%] min-w-0 ${msg.type === "user" ? "flex-row-reverse" : ""
-                  }`}
+                className={`flex gap-3 max-w-[80%] min-w-0 ${
+                  msg.role === "user" ? "flex-row-reverse" : ""
+                }`}
               >
                 {/* Avatar */}
                 <div className="shrink-0">
                   <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-medium shadow-md ${msg.type === "user"
-                      ? "bg-linear-to-br from-orange-500 to-amber-600"
-                      : "bg-linear-to-br from-gray-600 to-gray-800"
-                      }`}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-medium shadow-md ${
+                      msg.role === "user"
+                        ? "bg-linear-to-br from-orange-500 to-amber-600"
+                        : "bg-linear-to-br from-gray-600 to-gray-800"
+                    }`}
                   >
-                    {msg.type === "user" ? (
+                    {msg.role === "user" ? (
                       <img
                         src={modifyCloudinaryURL(
                           userData?.profile?.avatar?.secure_url,
@@ -179,20 +177,24 @@ const ChatbotPage = () => {
                         className="w-9 h-9 rounded-full object-cover"
                       />
                     ) : (
-                      <FaRobot />
+                      <FaRobot className="w-5 h-5" />
                     )}
                   </div>
                 </div>
 
                 {/* Message Bubble */}
-                <div className="min-w-0">
+                <div className="min-w-15">
                   <div
-                    className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap wrap-break-word shadow-sm ${msg.type === "user"
-                      ? "bg-linear-to-br from-orange-500 to-amber-600 text-white"
-                      : "bg-white text-gray-800 border border-gray-200"
-                      }`}
+                    className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap wrap-break-word shadow-sm pb-6 ${
+                      msg.role === "user"
+                        ? "bg-linear-to-br from-orange-500 to-amber-600 text-white"
+                        : "bg-white text-gray-800 border border-gray-200"
+                    }`}
                   >
                     {msg.content}
+                  </div>
+                  <div className="flex justify-end text-[10px] font-bold relative bottom-5 right-4">
+                    {msg.time}
                   </div>
 
                   {/* Recipes Grid */}
@@ -200,34 +202,10 @@ const ChatbotPage = () => {
                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {msg.recipes.map((recipe) => {
                         return (
-                          <div
+                          <RecipeChatCard
                             key={recipe._id.toString()}
-                            className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 relative"
-                          >
-                            <img
-                              src={recipe.thumbnail?.secure_url}
-                              alt={recipe.title}
-                              className="w-full h-32 object-cover"
-                            />
-                            <div className="p-3">
-                              <h3 className="font-medium text-gray-800 text-sm line-clamp-1">
-                                {recipe.title}
-                              </h3>
-                              <div className="flex justify-between items-center mt-2">
-                                <span className="text-xs text-orange-600 font-medium">
-                                  {recipe.cuisine}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    navigate(`/recipe/${recipe._id.toString()}`)
-                                  }
-                                  className="not-[]:text-xs px-3 py-1 rounded-full hover:scale-105 transition-transform bg-orange-500 text-white hover:bg-orange-600 cursor-pointer"
-                                >
-                                  View
-                                </button>
-                              </div>
-                            </div>
-                          </div>
+                            recipe={recipe}
+                          />
                         );
                       })}
                     </div>
@@ -239,7 +217,7 @@ const ChatbotPage = () => {
 
           {/* Loading Indicator */}
           {isLoading && (
-            <div className="flex justify-start">
+            <div className="flex justify-start flex-col">
               <div className="flex gap-3">
                 <div className="w-9 h-9 rounded-full bg-linear-to-br from-gray-600 to-gray-800 flex items-center justify-center text-white">
                   <FaRobot />
@@ -255,6 +233,11 @@ const ChatbotPage = () => {
                   </span>
                 </div>
               </div>
+              <img
+                src="https://res.cloudinary.com/dpoqek1ce/image/upload/Cooking_lq8bsy.gif"
+                alt="loading gif"
+                className="w-[60%]"
+              />
             </div>
           )}
 
@@ -266,7 +249,7 @@ const ChatbotPage = () => {
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-200 px-4 py-4 z-50">
         <div className="max-w-4xl mx-auto space-y-3">
           {/* Quick Suggestions */}
-          {messages.length === 1 && (
+          {messages?.length === 1 && (
             <div className="flex flex-wrap gap-2 justify-center">
               {quickSuggestions.map((suggestion, i) => (
                 <button
@@ -282,25 +265,31 @@ const ChatbotPage = () => {
 
           {/* Input + Send + Menu */}
           <div className="flex flex-col gap-2">
-
             {/* Show Selected Tool Badge */}
-            {mode && (
+            {(toolInUse.isRecipeSearch || toolInUse.isCookingTip) && (
               <div className="flex items-center">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 border border-gray-200 text-gray-700 shadow-sm transition-all">
-                  {mode === "recipe" ? (
-                    <FaUtensils className="text-orange-500 w-3 h-3" />
-                  ) : (
-                    <FaLightbulb className="text-amber-500 w-3 h-3" />
+                  {toolInUse.isRecipeSearch && (
+                    <>
+                      <FaUtensils className="text-orange-500 w-3 h-3" />
+                      <span className="ml-1">Find Recipe</span>
+                    </>
                   )}
-                  {mode === "recipe" ? "Find Recipe" : "Cooking Tips"}
+                  {toolInUse.isCookingTip && (
+                    <>
+                      <FaLightbulb className="text-amber-500 w-3 h-3" />
+                      <span className="ml-1">Cooking Tips</span>
+                    </>
+                  )}
                   <button
-                    onClick={() => setMode(null)}
+                    onClick={() => {
+                      dispatch(setRecipeSearchTool(false));
+                      dispatch(setCookingTipTool(false));
+                    }}
                     className="ml-1 p-0.5 text-gray-400 hover:text-red-500 hover:bg-gray-200 rounded-full transition-colors cursor-pointer"
                     aria-label="Clear tool"
                   >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <FaTimes className="w-3 h-3" />
                   </button>
                 </span>
               </div>
@@ -311,10 +300,11 @@ const ChatbotPage = () => {
               <div className="relative shrink-0">
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className={`p-3 rounded-full cursor-pointer transition-colors ${isMenuOpen || mode
-                    ? "bg-gray-200 text-gray-900"
-                    : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
-                    }`}
+                  className={`p-3 rounded-full cursor-pointer transition-colors ${
+                    isMenuOpen
+                      ? "bg-gray-200 text-gray-900"
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+                  }`}
                   aria-label="Menu options"
                 >
                   <LuCookingPot className="w-5 h-5" />
@@ -326,29 +316,43 @@ const ChatbotPage = () => {
                     <div className="p-1.5 flex flex-col gap-1">
                       <button
                         onClick={() => {
-                          setMode("recipe");
+                          dispatch(setRecipeSearchTool(true));
                           setIsMenuOpen(false);
                         }}
-                        className={`w-full cursor-pointer flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors ${mode === "recipe"
-                          ? "bg-orange-50 text-orange-600 font-medium"
-                          : "text-gray-600 hover:bg-gray-50"
-                          }`}
+                        className={`w-full cursor-pointer flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors ${
+                          toolInUse.isRecipeSearch
+                            ? "bg-orange-50 text-orange-600 font-medium"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
                       >
-                        <FaUtensils className={mode === "recipe" ? "text-orange-500" : "text-gray-400"} />
+                        <FaUtensils
+                          className={
+                            toolInUse.isRecipeSearch
+                              ? "text-orange-500"
+                              : "text-gray-400"
+                          }
+                        />
                         Find Recipe
                       </button>
 
                       <button
                         onClick={() => {
-                          setMode("tips");
+                          dispatch(setCookingTipTool(true));
                           setIsMenuOpen(false);
                         }}
-                        className={`w-full cursor-pointer flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors ${mode === "tips"
-                          ? "bg-amber-50 text-amber-600 font-medium"
-                          : "text-gray-600 hover:bg-gray-50"
-                          }`}
+                        className={`w-full cursor-pointer flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors ${
+                          toolInUse.isCookingTip
+                            ? "bg-amber-50 text-amber-600 font-medium"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
                       >
-                        <FaLightbulb className={mode === "tips" ? "text-amber-500" : "text-gray-400"} />
+                        <FaLightbulb
+                          className={
+                            toolInUse.isCookingTip
+                              ? "text-amber-500"
+                              : "text-gray-400"
+                          }
+                        />
                         Cooking Tips
                       </button>
                     </div>
@@ -362,11 +366,11 @@ const ChatbotPage = () => {
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={
-                  mode === "recipe"
+                  toolInUse.isRecipeSearch
                     ? "Ask for a recipe or list ingredients..."
-                    : mode === "tips"
+                    : toolInUse.isCookingTip
                       ? "Ask for cooking tips (e.g. how to chop onions)..."
-                      : "Type a message..."
+                      : "Type a message or ask for a recipe..."
                 }
                 className="flex-1 px-4 py-3 bg-gray-50 border border-gray-300 rounded-2xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-shadow"
                 rows={1}
@@ -378,10 +382,11 @@ const ChatbotPage = () => {
               <button
                 onClick={handleSendMessage}
                 disabled={!inputMessage.trim() || isLoading}
-                className={`p-3 rounded-full transition-all shrink-0 ${inputMessage.trim() && !isLoading
-                  ? "bg-linear-to-br from-orange-500 to-amber-600 text-white shadow-lg hover:shadow-xl hover:scale-105 cursor-pointer"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  }`}
+                className={`p-3 rounded-full transition-all shrink-0 ${
+                  inputMessage.trim() && !isLoading
+                    ? "bg-linear-to-br from-orange-500 to-amber-600 text-white shadow-lg hover:shadow-xl hover:scale-105 cursor-pointer"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -400,6 +405,4 @@ const ChatbotPage = () => {
       </div>
     </div>
   );
-};
-
-export default ChatbotPage;
+}

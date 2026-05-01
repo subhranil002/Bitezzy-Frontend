@@ -1,8 +1,6 @@
 import axiosInstance from "../../configs/axiosConfig";
 
-export default async function generateResponseApi(userInput) {
-  const res = axiosInstance.post("/chatbot/chat", {
-    userInput,
-  });
+export default async function generateResponseApi(data) {
+  const res = axiosInstance.post("/chatbot/chat", data);
   return (await res).data;
 }
