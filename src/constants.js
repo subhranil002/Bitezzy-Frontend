@@ -61,3 +61,33 @@ export const SORT_OPTIONS = ["relevance", "rating", "popularity", "time"];
 
 export const LOGO_URL =
   "https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/logo.png";
+
+export const UNIT_OPTIONS = [
+  // Weight
+  "mg",
+  "g",
+  "kg",
+
+  // Volume
+  "ml",
+  "l",
+  "tsp",
+  "tbsp",
+  "cup",
+
+  // Countable
+  "piece",
+  "slice",
+  "clove",
+  "stick",
+  "can",
+
+  // Size / Length
+  "cm",
+  "inch",
+
+  // Informal cooking measures
+  "pinch",
+  "dash",
+  "handful",
+];

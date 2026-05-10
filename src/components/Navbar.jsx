@@ -1,5 +1,3 @@
-// Finalized
-
 import {
   FaBars,
   FaBolt,
@@ -97,7 +95,6 @@ export default function Navbar({ children }) {
     },
   ];
 
-  // Helper to close the DaisyUI drawer
   const closeSidebar = () => {
     const drawer = document.getElementById("navbar-drawer");
     if (drawer) drawer.checked = false;
@@ -334,7 +331,7 @@ export default function Navbar({ children }) {
                 </p>
               </div>
             </div>
-            
+
             {/* Close Button Component */}
             <label
               htmlFor="navbar-drawer"

@@ -1,15 +1,15 @@
 import { useState } from "react";
 import {
   FaAllergies,
+  FaChevronDown,
+  FaChevronUp,
+  FaCircle,
   FaGlobe,
   FaHeart,
   FaSeedling,
   FaStar,
-  FaUsers,
-  FaChevronDown,
-  FaChevronUp,
   FaTimes,
-  FaCircle,
+  FaUsers,
 } from "react-icons/fa";
 
 function ProfileStats({ profileData }) {
@@ -95,15 +95,15 @@ function ProfileStats({ profileData }) {
               onClick={() => handleToggle(item)}
               className={`
                 card bg-base-100 shadow-sm border-2 transition-all duration-300 relative
-                ${isActive
-                  ? "border-orange-500 shadow-lg shadow-orange-100 scale-[1.02] -translate-y-1 z-10"
-                  : "border-base-200 hover:border-orange-300 hover:shadow-md"
+                ${
+                  isActive
+                    ? "border-orange-500 shadow-lg shadow-orange-100 scale-[1.02] -translate-y-1 z-10"
+                    : "border-base-200 hover:border-orange-300 hover:shadow-md"
                 }
                 ${isClickable ? "cursor-pointer group" : "cursor-default"}
               `}
             >
               <div className="card-body p-3 sm:p-5 items-center text-center gap-1">
-
                 <div
                   className={`
                     w-12 h-12 rounded-full flex items-center justify-center mb-1
@@ -124,9 +124,10 @@ function ProfileStats({ profileData }) {
                   <div
                     className={`
                       mt-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 transition-colors
-                      ${isActive
-                        ? "bg-orange-500 text-white"
-                        : "bg-base-200 text-gray-500 group-hover:bg-orange-100 group-hover:text-orange-600"
+                      ${
+                        isActive
+                          ? "bg-orange-500 text-white"
+                          : "bg-base-200 text-gray-500 group-hover:bg-orange-100 group-hover:text-orange-600"
                       }
                     `}
                   >
@@ -151,7 +152,9 @@ function ProfileStats({ profileData }) {
             <div className="card-body p-6 sm:p-8">
               <div className="flex items-center justify-between pb-4 border-b border-orange-200">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-white shadow-sm ${activeItem.iconColor}`}>
+                  <div
+                    className={`p-2 rounded-lg bg-white shadow-sm ${activeItem.iconColor}`}
+                  >
                     <activeItem.icon className="w-5 h-5" />
                   </div>
                   <div>
@@ -183,7 +186,6 @@ function ProfileStats({ profileData }) {
                   </div>
                 ))}
               </div>
-
             </div>
           </div>
         </div>

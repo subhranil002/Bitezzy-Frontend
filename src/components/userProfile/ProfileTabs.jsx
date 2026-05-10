@@ -12,11 +12,14 @@ import { useNavigate } from "react-router-dom";
 function ProfileTabs({ profileData }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("subscribed");
+  const [subscribedChefs, setSubscribedChefs] = useState([]);
 
   const tabs = [
     { key: "subscribed", label: "Subscribed", icon: FaUsers },
     { key: "reviews", label: "Reviews Given", icon: FaRegClock },
   ];
+
+  // TODO: Get Subscribed Chefs
 
   return (
     <div className="w-full">
@@ -50,9 +53,9 @@ function ProfileTabs({ profileData }) {
         {/* Subscribed Tab */}
         {activeTab === "subscribed" && (
           <div className="space-y-6">
-            {profileData?.profile?.subscribed?.length > 0 ? (
+            {subscribedChefs.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {profileData.profile.subscribed.map((chef) => (
+                {subscribedChefs.map((chef) => (
                   <div
                     key={chef._id.toString()}
                     className="card bg-base-100 shadow-lg border border-orange-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"

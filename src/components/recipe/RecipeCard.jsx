@@ -43,7 +43,7 @@ export default function RecipeCard({ recipe }) {
     if (!recipe.isPremium) return true;
 
     const subs = userData?.profile?.subscribed ?? [];
-    return subs.some((sub) => s(sub._id) === chefId);
+    return subs.some((id) => s(id) === chefId);
   };
 
   // Check if recipe is already in favourites

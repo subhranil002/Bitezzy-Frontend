@@ -13,6 +13,7 @@ import Step1BasicDetails from "../../components/addRecipe/Step1BasicDetails";
 import Step2Ingredients from "../../components/addRecipe/Step2Ingredients";
 import Step3Instructions from "../../components/addRecipe/Step3Instructions";
 import Step4Preview from "../../components/addRecipe/Step4Preview";
+import { CUISINE_OPTIONS, DIETARY_OPTIONS, UNIT_OPTIONS } from "../../constants";
 import HomeLayout from "../../layouts/HomeLayout";
 
 const STEPS = [
@@ -36,54 +37,6 @@ const STEPS = [
     title: "Preview",
     description: "Review your recipe before publishing",
   },
-];
-
-const cuisineOptions = [
-  "indian",
-  "italian",
-  "chinese",
-  "mexican",
-  "thai",
-  "japanese",
-  "french",
-  "mediterranean",
-  "american",
-  "korean",
-  "vietnamese",
-  "middle-eastern",
-  "british",
-  "spanish",
-  "german",
-  "greek",
-];
-
-const dietaryOptions = [
-  "vegetarian",
-  "vegan",
-  "keto",
-  "paleo",
-  "gluten-free",
-  "dairy-free",
-  "low-carb",
-  "high-protein",
-  "sugar-free",
-  "organic",
-  "raw",
-  "mediterranean",
-  "low-fat",
-];
-
-const unitOptions = [
-  "g",
-  "kg",
-  "ml",
-  "l",
-  "cup",
-  "tbsp",
-  "tsp",
-  "pc",
-  "oz",
-  "lb",
 ];
 
 export default function AddRecipe() {
@@ -329,12 +282,12 @@ export default function AddRecipe() {
             <div className="card-body p-6 md:p-8">
               {currentStep === 1 && (
                 <Step1BasicDetails
-                  cuisineOptions={cuisineOptions}
-                  dietaryOptions={dietaryOptions}
+                  cuisineOptions={CUISINE_OPTIONS}
+                  dietaryOptions={DIETARY_OPTIONS}
                 />
               )}
               {currentStep === 2 && (
-                <Step2Ingredients unitOptions={unitOptions} />
+                <Step2Ingredients unitOptions={UNIT_OPTIONS} />
               )}
               {currentStep === 3 && <Step3Instructions />}
               {currentStep === 4 && <Step4Preview />}

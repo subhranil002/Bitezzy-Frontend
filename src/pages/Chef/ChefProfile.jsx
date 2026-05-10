@@ -25,22 +25,23 @@ import HomeLayout from "../../layouts/HomeLayout";
 
 function ChefProfile({ profileData }) {
   const { userData } = useSelector((state) => state.auth);
+  const [myRecipes, setMyRecipes] = useState([]);
+
+  // TODO: Get My Recipes
 
   const isOwnProfile = userData?._id.toString() === profileData?._id.toString();
 
   const [subscribed, setSubscribed] = useState(
     userData?.profile?.subscribed?.some(
-      (chef) => chef._id.toString() === profileData._id.toString(),
+      (id) => id.toString() === profileData._id.toString(),
     ),
   );
   const [loading, setLoading] = useState(false);
 
   const getAverageRating = () => {
-    const recipes = profileData?.chefProfile?.recipes;
+    if (!myRecipes || myRecipes.length === 0) return "N/A";
 
-    if (!recipes || recipes.length === 0) return "N/A";
-
-    const allRatings = recipes.flatMap(
+    const allRatings = myRecipes.flatMap(
       (recipe) => recipe?.reviews?.map((rev) => rev.rating) || [],
     );
 
@@ -59,7 +60,7 @@ function ChefProfile({ profileData }) {
     },
     {
       label: "Recipes",
-      value: profileData?.chefProfile?.recipes?.length || 0,
+      value: myRecipes.length || 0,
     },
     {
       label: "Chef Type",
@@ -114,7 +115,7 @@ function ChefProfile({ profileData }) {
             <div className="relative mb-20">
               <div className="w-full h-64 sm:h-80 lg:h-88 rounded-3xl overflow-hidden shadow-2xl border border-orange-100">
                 <img
-                  src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=60"
+                  src="https://res.cloudinary.com/dpoqek1ce/image/upload/photo-1504674900247-0877df9cc836_cnclaj.jpg"
                   alt="banner"
                   className="w-full h-full object-cover"
                 />
@@ -366,9 +367,9 @@ function ChefProfile({ profileData }) {
                   <FaUtensils className="text-orange-500" />
                   Recipes by {profileData?.profile?.name}
                 </h3>
-                {profileData?.chefProfile?.recipes?.length ? (
+                {myRecipes.length ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {profileData?.chefProfile?.recipes.map((recipe, idx) => (
+                    {myRecipes.map((recipe, idx) => (
                       <div className="flex justify-center" key={idx}>
                         <RecipeCard
                           key={recipe._id.toString()}

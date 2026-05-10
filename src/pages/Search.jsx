@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   FaDollarSign,
   FaFilter,
+  FaFire,
   FaSearch,
   FaSlidersH,
   FaStar,
-  FaTimes,
-  FaFire,
 } from "react-icons/fa";
 
 import searchRecipeApi from "../apis/recipe/searchRecipeApi";
@@ -36,7 +35,7 @@ const RecipeGrid = ({ children }) => (
 );
 
 const EmptyState = ({ onClear }) => (
-  <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
+  <div className="flex flex-col items-center justify-center pb-24 text-center">
     <div className="relative w-32 h-32 mb-8">
       <div className="absolute inset-0 bg-orange-100 rounded-full animate-ping opacity-20"></div>
       <div className="absolute inset-0 bg-orange-50 rounded-full flex items-center justify-center shadow-inner">
@@ -47,7 +46,8 @@ const EmptyState = ({ onClear }) => (
       Nothing found here
     </h3>
     <p className="text-gray-500 mb-8 max-w-md text-lg">
-      We searched the entire kitchen, but couldn't find recipes matching your specific taste.
+      We searched the entire kitchen, but couldn't find recipes matching your
+      specific taste.
     </p>
     <button
       type="button"
@@ -64,9 +64,7 @@ function Search() {
   const [meta, setMeta] = useState({});
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  
-  // Track initial render to prevent unwanted API calls on mount
-  const isFirstRender = useRef(true);
+  const quickSelectDebounceRef = useRef(null);
 
   const {
     register,
@@ -76,7 +74,6 @@ function Search() {
     getValues,
     setValue,
     setFocus,
-    formState: { errors },
   } = useForm({
     mode: "onChange",
     defaultValues: defaultFormValues,
@@ -149,6 +146,23 @@ function Search() {
     applySearch({ sort: value, page: 1 });
   };
 
+  const toggleQuickSelect = (pref) => {
+    const current = getValues("dietaryPreferences") || [];
+    const updatedList = current.includes(pref)
+      ? current.filter((p) => p !== pref)
+      : [...current, pref];
+
+    updateField("dietaryPreferences", updatedList);
+
+    if (quickSelectDebounceRef.current) {
+      clearTimeout(quickSelectDebounceRef.current);
+    }
+
+    quickSelectDebounceRef.current = setTimeout(() => {
+      searchRecipes({ ...getValues(), dietaryPreferences: updatedList, page: 1 });
+    }, 600);
+  };
+
   const toggleDietaryPreference = (pref) => {
     const current = getValues("dietaryPreferences") || [];
     updateField(
@@ -170,7 +184,6 @@ function Search() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Debounce Text Query Input
   useEffect(() => {
     const delay = setTimeout(() => {
       const values = getValues();
@@ -179,26 +192,13 @@ function Search() {
     return () => clearTimeout(delay);
   }, [watchedValues.query]);
 
-  // NEW: Debounce Dietary Preferences (Desktop Only)
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    // Check if user is on a desktop (Tailwind 'xl' breakpoint is 1280px)
-    if (typeof window !== "undefined" && window.innerWidth >= 1280) {
-      const delay = setTimeout(() => {
-        searchRecipes({ ...getValues(), page: 1 });
-      }, 600); // 600ms debounce prevents API spam
-
-      return () => clearTimeout(delay); // Clears the timer if the user clicks again before 600ms
-    }
-  }, [watchedValues.dietaryPreferences]);
-
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (Number(watchedValues.priceMin) > 0 || Number(watchedValues.priceMax) > 0) count++;
+    if (
+      Number(watchedValues.priceMin) > 0 ||
+      Number(watchedValues.priceMax) > 0
+    )
+      count++;
     if (Number(watchedValues.rating) > 0) count++;
     if (watchedValues.premium) count++;
     if (watchedValues.cuisine) count++;
@@ -209,10 +209,9 @@ function Search() {
   return (
     <HomeLayout>
       <div className="min-h-screen bg-gray-50/50">
-
         {/* HERO SECTION */}
         <div className="relative bg-linear-to-br from-orange-400 via-orange-500 to-red-500 pt-16 pb-28 px-4 overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/food.png')] opacity-90 mix-blend-overlay"></div>
+          <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dpoqek1ce/image/upload/food_tjm7b4.png')] opacity-90 mix-blend-overlay"></div>
           <div className="relative z-10 max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-md tracking-tight">
               What are you craving?
@@ -226,7 +225,6 @@ function Search() {
         {/* FLOATING COMMAND CENTER */}
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 relative z-20 -mt-16">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-
             {/* The Main Search Input Bar */}
             <div className="bg-white p-2 rounded-4xl shadow-2xl shadow-orange-500/10 flex items-center border border-gray-100 transition-all focus-within:shadow-orange-500/20 focus-within:ring-4 focus-within:ring-orange-100">
               <div className="pl-6 pr-4">
@@ -243,34 +241,38 @@ function Search() {
                   type="submit"
                   className="btn bg-gray-900 hover:bg-gray-800 text-white border-none rounded-full px-8 text-base shadow-md"
                 >
-                  {isSearching ? <span className="loading loading-spinner"></span> : "Search"}
+                  {isSearching ? (
+                    <span className="loading loading-spinner"></span>
+                  ) : (
+                    "Search"
+                  )}
                 </button>
               </div>
             </div>
 
             {/* Quick Actions & Sort Toolbar */}
             <div className="bg-white rounded-3xl p-4 sm:px-6 flex flex-row items-center justify-between shadow-xl shadow-gray-200/50 border border-gray-100">
-
-              {/* Quick Dietary Chips (Hidden on Mobile/Tablet, visible on Desktop) */}
               <div className="hidden xl:flex flex-wrap items-center gap-2 w-auto">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mr-1 mb-0">
                   Quick Select
                 </span>
                 {DIETARY_OPTIONS.map((pref) => {
-                  const selected = watchedValues.dietaryPreferences?.includes(pref);
+                  const selected =
+                    watchedValues.dietaryPreferences?.includes(pref);
                   return (
                     <label
                       key={pref}
-                      className={`cursor-pointer capitalize px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-200 border select-none active:scale-95 ${selected
-                        ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50 shadow-sm"
-                        }`}
+                      className={`cursor-pointer capitalize px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-200 border select-none active:scale-95 ${
+                        selected
+                          ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50 shadow-sm"
+                      }`}
                     >
                       <input
                         type="checkbox"
                         className="hidden"
                         checked={selected}
-                        onChange={() => toggleDietaryPreference(pref)}
+                        onChange={() => toggleQuickSelect(pref)}
                       />
                       {pref}
                     </label>
@@ -278,25 +280,28 @@ function Search() {
                 })}
               </div>
 
-              {/* Advanced Toggle & Sort (Spans full width on mobile, aligns right on desktop) */}
+              {/* Advanced Toggle & Sort */}
               <div className="flex items-center gap-3 w-full xl:w-auto justify-between xl:justify-end shrink-0">
                 <select
                   className="select select-bordered bg-gray-50 border-gray-200 focus:border-orange-400 rounded-full font-bold text-gray-600 uppercase text-xs"
-                  value={watchedValues.sortBy}
+                  value={watchedValues.sort}
                   onChange={(e) => handleSortChange(e.target.value)}
                 >
                   {SORT_OPTIONS.map((sort) => (
-                    <option key={sort} value={sort}>{sort}</option>
+                    <option key={sort} value={sort}>
+                      {sort}
+                    </option>
                   ))}
                 </select>
 
                 <button
                   type="button"
                   onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                  className={`btn rounded-full border-none transition-colors ${showAdvancedFilters || activeFiltersCount > 0
-                    ? "bg-orange-100 text-orange-600 hover:bg-orange-200"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  className={`btn rounded-full border-none transition-colors ${
+                    showAdvancedFilters || activeFiltersCount > 0
+                      ? "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                 >
                   <FaSlidersH />
                   Advanced
@@ -311,8 +316,11 @@ function Search() {
 
             {/* COLLAPSIBLE ADVANCED FILTERS */}
             <div
-              className={`transition-all duration-500 ease-in-out overflow-hidden rounded-3xl ${showAdvancedFilters ? "opacity-100 max-h-[1000px] mt-4" : "opacity-0 max-h-0 m-0"
-                }`}
+              className={`transition-all duration-500 ease-in-out overflow-hidden rounded-3xl ${
+                showAdvancedFilters
+                  ? "opacity-100 max-h-[1000px] mt-4"
+                  : "opacity-0 max-h-0 m-0"
+              }`}
             >
               <div className="bg-white p-6 sm:p-8 shadow-xl shadow-gray-200/50 border border-gray-100 rounded-3xl">
                 <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
@@ -329,22 +337,22 @@ function Search() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-
-                  {/* Dietary Preferences (Visible ONLY on Mobile/Tablet inside Advanced) */}
                   <div className="space-y-3 xl:hidden md:col-span-2 lg:col-span-4">
                     <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">
                       Dietary Needs
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {DIETARY_OPTIONS.map((pref) => {
-                        const selected = watchedValues.dietaryPreferences?.includes(pref);
+                        const selected =
+                          watchedValues.dietaryPreferences?.includes(pref);
                         return (
                           <label
                             key={`mobile-${pref}`}
-                            className={`cursor-pointer capitalize px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 border select-none active:scale-95 ${selected
-                              ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20"
-                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50 shadow-sm"
-                              }`}
+                            className={`cursor-pointer capitalize px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 border select-none active:scale-95 ${
+                              selected
+                                ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20"
+                                : "bg-gray-50 text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50 shadow-sm"
+                            }`}
                           >
                             <input
                               type="checkbox"
@@ -371,7 +379,13 @@ function Search() {
                     >
                       <option value="">Any Cuisine</option>
                       {CUISINE_OPTIONS.map((cuisine) => (
-                        <option key={cuisine} value={cuisine} className="uppercase">{cuisine}</option>
+                        <option
+                          key={cuisine}
+                          value={cuisine}
+                          className="uppercase"
+                        >
+                          {cuisine}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -386,7 +400,10 @@ function Search() {
                         type="number"
                         className="input input-ghost w-full bg-transparent focus:bg-transparent h-10 px-3 text-center font-bold text-gray-700 placeholder-gray-400"
                         placeholder="Min"
-                        {...register("priceMin", { valueAsNumber: true, min: 0 })}
+                        {...register("priceMin", {
+                          valueAsNumber: true,
+                          min: 0,
+                        })}
                       />
                       <div className="w-px h-6 bg-gray-300"></div>
                       <input
@@ -411,22 +428,23 @@ function Search() {
                       Rating <FaStar className="text-amber-400" />
                     </label>
                     <div className="bg-gray-50 rounded-2xl border border-gray-200 p-1 flex">
-                      {[0, 3, 4, 5].map((stars) => (
+                      {[0, 2, 3, 4, 4.5].map((stars) => (
                         <label
                           key={stars}
-                          className={`flex-1 cursor-pointer py-2 text-center rounded-xl text-sm font-bold transition-all ${Number(watchedValues.rating) === (stars === 0 ? 0 : stars === 5 ? 4.5 : stars)
-                            ? "bg-white text-orange-600 shadow-sm border border-gray-100"
-                            : "text-gray-500 hover:bg-gray-100"
-                            }`}
+                          className={`flex-1 cursor-pointer py-2 text-center rounded-xl text-sm font-bold transition-all ${
+                            Number(watchedValues.rating) === stars
+                              ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                              : "text-gray-500 hover:bg-gray-100"
+                          }`}
                         >
                           <input
                             type="radio"
                             className="hidden"
                             name="rating"
-                            checked={Number(watchedValues.rating) === (stars === 0 ? 0 : stars === 5 ? 4.5 : stars)}
-                            onChange={() => updateField("rating", stars === 0 ? 0 : stars === 5 ? 4.5 : stars)}
+                            checked={Number(watchedValues.rating) === stars}
+                            onChange={() => updateField("rating", stars)}
                           />
-                          {stars === 0 ? "Any" : stars === 5 ? "4.5+" : `${stars}+`}
+                          {stars === 0 ? "Any" : `${stars}+`}
                         </label>
                       ))}
                     </div>
@@ -435,14 +453,19 @@ function Search() {
                   {/* Premium Toggle */}
                   <div className="space-y-3 flex flex-col justify-end pb-1">
                     <label
-                      className={`flex items-center justify-between p-4 cursor-pointer rounded-2xl transition-all border ${watchedValues.premium
-                        ? "bg-linear-to-r from-orange-50 to-red-50 border-orange-200 shadow-inner"
-                        : "bg-gray-50 border-gray-200 hover:border-orange-300"
-                        }`}
+                      className={`flex items-center justify-between p-4 cursor-pointer rounded-2xl transition-all border ${
+                        watchedValues.premium
+                          ? "bg-linear-to-r from-orange-50 to-red-50 border-orange-200 shadow-inner"
+                          : "bg-gray-50 border-gray-200 hover:border-orange-300"
+                      }`}
                     >
                       <div className="flex items-center gap-2">
-                        <FaFire className={`w-5 h-5 ${watchedValues.premium ? "text-red-500" : "text-gray-400"}`} />
-                        <span className={`font-black ${watchedValues.premium ? "text-gray-900" : "text-gray-600"}`}>
+                        <FaFire
+                          className={`w-5 h-5 ${watchedValues.premium ? "text-red-500" : "text-gray-400"}`}
+                        />
+                        <span
+                          className={`font-black ${watchedValues.premium ? "text-gray-900" : "text-gray-600"}`}
+                        >
                           Premium Recipes
                         </span>
                       </div>
@@ -450,21 +473,20 @@ function Search() {
                         type="checkbox"
                         className="toggle toggle-warning"
                         checked={!!watchedValues.premium}
-                        onChange={(e) => updateField("premium", e.target.checked)}
+                        onChange={(e) =>
+                          updateField("premium", e.target.checked)
+                        }
                       />
                     </label>
                   </div>
-
                 </div>
 
-                {/* Mobile Apply Button inside Advanced */}
                 <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
                   <button
                     onClick={() => {
-                      handleSubmit(onSubmit)();
                       setShowAdvancedFilters(false);
                     }}
-                    type="button"
+                    type="submit"
                     className="btn bg-gray-900 hover:bg-gray-800 text-white rounded-full px-8 w-full md:w-auto shadow-md"
                   >
                     Apply Filters
@@ -476,11 +498,13 @@ function Search() {
 
           {/* MAIN RESULTS AREA */}
           <div className="mt-12">
-            <div className="mb-6 flex justify-between items-end px-2 max-w-10">
+            <div className="mb-6 sm:flex sm:justify-between sm:items-end px-2">
               <h2 className="text-2xl font-black text-gray-800 truncate">
-                {watchedValues.query ? `Results for "${watchedValues.query}"` : "Explore Recipes"}
+                {watchedValues.query
+                  ? `Results for "${watchedValues.query}"`
+                  : "Explore Recipes"}
               </h2>
-              <span className="text-sm font-bold text-gray-500 bg-gray-200/50 px-3 py-1 rounded-full">
+              <span className="badge badge-neutral">
                 {meta.total || 0} Found
               </span>
             </div>
@@ -504,20 +528,26 @@ function Search() {
             {/* Pagination Component */}
             {Number(meta?.totalPages || 1) > 1 && (
               <div className="flex justify-center pt-8 pb-16">
-                <div className="join shadow-xl border border-gray-100 rounded-full bg-white">
+                <div className="join">
                   <button
-                    className="join-item btn bg-white border-none hover:bg-gray-50 text-gray-700 px-6 disabled:bg-gray-50"
+                    className="join-item btn"
                     disabled={Number(meta?.page || 1) <= 1 || isSearching}
                     onClick={() => changePage(Number(meta?.page || 1) - 1)}
                   >
                     « Prev
                   </button>
-                  <button className="join-item btn bg-white border-none text-gray-900 font-black cursor-default hover:bg-white px-8">
-                    Page {Number(meta?.page || 1)} of {Number(meta?.totalPages || 1)}
+
+                  <button className="join-item btn">
+                    Page {Number(meta?.page || 1)} of{" "}
+                    {Number(meta?.totalPages || 1)}
                   </button>
+
                   <button
-                    className="join-item btn bg-white border-none hover:bg-gray-50 text-gray-700 px-6 disabled:bg-gray-50"
-                    disabled={isSearching || Number(meta?.page || 1) >= Number(meta?.totalPages || 1)}
+                    className="join-item btn"
+                    disabled={
+                      isSearching ||
+                      Number(meta?.page || 1) >= Number(meta?.totalPages || 1)
+                    }
                     onClick={() => changePage(Number(meta?.page || 1) + 1)}
                   >
                     Next »
