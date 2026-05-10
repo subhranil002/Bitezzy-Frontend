@@ -2,10 +2,11 @@
 <html lang="en" data-theme="light">
   <head>
     <!-- ═══════════════════════════════════════════════
-         CHARSET, VIEWPORT & COMPATIBILITY
+         CHARSET, VIEWPORT, THEME-COLOR & COMPATIBILITY
     ═══════════════════════════════════════════════ -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f97316" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
     <!-- ═══════════════════════════════════════════════
@@ -29,9 +30,6 @@
       name="robots"
       content="index, follow, max-snippet:-1, max-image-preview:large"
     />
-    <meta name="language" content="English" />
-    <meta name="revisit-after" content="7 days" />
-    <meta name="rating" content="general" />
 
     <!-- ═══════════════════════════════════════════════
          GOOGLE BOT
@@ -59,11 +57,11 @@
     <meta property="og:site_name" content="Bitezzy" />
     <meta
       property="og:image"
-      content="https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/logo.png"
+      content="https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/poster"
     />
     <meta
       property="og:image:secure_url"
-      content="https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/logo.png"
+      content="https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/poster"
     />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -88,7 +86,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/logo.png"
+      content="https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/poster"
     />
     <meta name="twitter:site" content="@bitezzy" />
     <meta name="twitter:creator" content="@bitezzy" />
@@ -104,7 +102,10 @@
     ═══════════════════════════════════════════════ -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Bitezzy" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <link
       rel="apple-touch-icon"
       href="https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/logo.png"
@@ -175,24 +176,171 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Bitezzy",
-        "url": "https://bitezzy.store",
-        "description": "AI-powered recipe discovery platform where users explore, cook, and share recipes from top chefs.",
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": "https://bitezzy.store/search?q={search_term_string}",
-          "query-input": "required name=search_term_string"
-        },
-        "publisher": {
-          "@type": "Organization",
-          "name": "Bitezzy",
-          "url": "https://bitezzy.store",
-          "logo": {
-            "@type": "ImageObject",
-            "url": "https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/logo.png"
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://www.bitezzy.store/#website",
+            "name": "Bitezzy",
+            "url": "https://www.bitezzy.store",
+            "description": "Bitezzy is your AI-powered culinary companion. Discover thousands of recipes from top chefs, cook with step-by-step guidance, and share your own creations with a passionate food community.",
+            "publisher": {
+              "@id": "https://www.bitezzy.store/#organization"
+            }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://www.bitezzy.store/#organization",
+            "name": "Bitezzy",
+            "url": "https://www.bitezzy.store",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/logo.png"
+            },
+            "description": "Bitezzy is an AI-powered culinary platform focused on discovering, cooking, and sharing recipes with a passionate food community."
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://www.bitezzy.store/about#webpage",
+            "url": "https://www.bitezzy.store/about",
+            "name": "About Bitezzy",
+            "description": "Learn about Bitezzy, our mission, and how we build recipe discovery experiences.",
+            "isPartOf": {
+              "@id": "https://www.bitezzy.store/#website"
+            },
+            "about": {
+              "@id": "https://www.bitezzy.store/#organization"
+            }
+          },
+          {
+            "@type": "AboutPage",
+            "@id": "https://www.bitezzy.store/our-team#webpage",
+            "url": "https://www.bitezzy.store/our-team",
+            "name": "The MasterChefs — Bitezzy Team",
+            "description": "Meet the talented creators, developers, strategists, and designers behind Bitezzy.",
+            "isPartOf": {
+              "@id": "https://www.bitezzy.store/#website"
+            },
+            "about": {
+              "@id": "https://www.bitezzy.store/#organization"
+            },
+            "mainEntity": {
+              "@id": "https://www.bitezzy.store/our-team#team"
+            }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://www.bitezzy.store/our-team#team",
+            "name": "The MasterChefs",
+            "description": "Crafting the future of food, one line of code at a time.",
+            "url": "https://www.bitezzy.store/our-team",
+            "member": [
+              {
+                "@type": "Person",
+                "@id": "https://www.bitezzy.store/our-team#subhranil-chakraborty",
+                "name": "Subhranil Chakraborty",
+                "jobTitle": "The Simmering Strategist",
+                "description": "Master of long-term planning and slow-cooked perfection. Subhranil ensures every project boils down to flawless execution and sustainable architecture.",
+                "worksFor": {
+                  "@id": "https://www.bitezzy.store/#organization"
+                },
+                "memberOf": {
+                  "@id": "https://www.bitezzy.store/our-team#team"
+                }
+              },
+              {
+                "@type": "Person",
+                "@id": "https://www.bitezzy.store/our-team#wasiq-afnan-ansari",
+                "name": "Wasiq Afnan Ansari",
+                "jobTitle": "Sultan of the Sauce",
+                "description": "Adding that extra kick to everything we build. Wasiq blends code and creativity to make sure our products always leave a lasting, flavorful impression.",
+                "worksFor": {
+                  "@id": "https://www.bitezzy.store/#organization"
+                },
+                "memberOf": {
+                  "@id": "https://www.bitezzy.store/our-team#team"
+                }
+              },
+              {
+                "@type": "Person",
+                "@id": "https://www.bitezzy.store/our-team#trisit-chanda",
+                "name": "Trisit Chanda",
+                "jobTitle": "Keeper of the Secret Sauce",
+                "description": "Guarding the architecture and core algorithms. Trisit manages the hidden ingredients and robust logic that make our applications truly unique.",
+                "worksFor": {
+                  "@id": "https://www.bitezzy.store/#organization"
+                },
+                "memberOf": {
+                  "@id": "https://www.bitezzy.store/our-team#team"
+                }
+              },
+              {
+                "@type": "Person",
+                "@id": "https://www.bitezzy.store/our-team#soudipta-sarkar",
+                "name": "Soudipta Sarkar",
+                "jobTitle": "Future Flavor Forecaster",
+                "description": "Always looking ahead to what’s next. Soudipta anticipates emerging trends, explores innovative ideas, and helps shape features that keep our products fresh, forward-thinking, and ready for the future.",
+                "worksFor": {
+                  "@id": "https://www.bitezzy.store/#organization"
+                },
+                "memberOf": {
+                  "@id": "https://www.bitezzy.store/our-team#team"
+                }
+              },
+              {
+                "@type": "Person",
+                "@id": "https://www.bitezzy.store/our-team#nabanita-nath",
+                "name": "Nabanita Nath",
+                "jobTitle": "Garnish Wizard",
+                "description": "Master of aesthetics and final touches. Nabanita turns functional interfaces into visual masterpieces, making sure every pixel looks delectable.",
+                "worksFor": {
+                  "@id": "https://www.bitezzy.store/#organization"
+                },
+                "memberOf": {
+                  "@id": "https://www.bitezzy.store/our-team#team"
+                }
+              }
+            ]
+          },
+          {
+            "@type": "ContactPage",
+            "@id": "https://www.bitezzy.store/contact#webpage",
+            "url": "https://www.bitezzy.store/contact",
+            "name": "Contact Bitezzy",
+            "description": "Get in touch with the Bitezzy team for support, feedback, and inquiries.",
+            "isPartOf": {
+              "@id": "https://www.bitezzy.store/#website"
+            },
+            "about": {
+              "@id": "https://www.bitezzy.store/#organization"
+            }
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://www.bitezzy.store/docs#webpage",
+            "url": "https://www.bitezzy.store/docs",
+            "name": "Bitezzy Documentation",
+            "description": "Documentation, guides, and resources for using Bitezzy.",
+            "isPartOf": {
+              "@id": "https://www.bitezzy.store/#website"
+            },
+            "about": {
+              "@id": "https://www.bitezzy.store/#organization"
+            }
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://www.bitezzy.store/privacy#webpage",
+            "url": "https://www.bitezzy.store/privacy",
+            "name": "Privacy Policy",
+            "description": "Read how Bitezzy handles your privacy, data, and account information.",
+            "isPartOf": {
+              "@id": "https://www.bitezzy.store/#website"
+            },
+            "about": {
+              "@id": "https://www.bitezzy.store/#organization"
+            }
           }
-        }
+        ]
       }
     </script>
   </head>

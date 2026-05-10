@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>You're Offline – Bitezzy</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: system-ui, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(
+          135deg,
+          #fff7ed 0%,
+          #ffedd5 50%,
+          #fed7aa 100%
+        );
+        color: #1c1917;
+        text-align: center;
+        padding: 2rem;
+      }
+
+      .icon {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+        color: #c2410c;
+      }
+
+      p {
+        font-size: 1rem;
+        color: #78716c;
+        max-width: 360px;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+      }
+
+      a {
+        display: inline-block;
+        background: linear-gradient(to right, #f97316, #ef4444);
+        color: white;
+        font-weight: 700;
+        padding: 0.75rem 2rem;
+        border-radius: 9999px;
+        text-decoration: none;
+        box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+        transition: transform 0.2s;
+      }
+
+      a:hover {
+        transform: translateY(-2px);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="icon">🍳</div>
+
+    <h1>You're Offline</h1>
+
+    <p>
+      It looks like you've lost your internet connection. Reconnect to continue
+      exploring Bitezzy recipes!
+    </p>
+
+    <a href="#" id="tryAgain">Try Again</a>
+
+    <script>
+      function getLastPage() {
+        return sessionStorage.getItem("lastVisitedPage") || "/";
+      }
+
+      function redirectBack() {
+        window.location.replace(getLastPage());
+      }
+
+      document.getElementById("tryAgain").addEventListener("click", (e) => {
+        e.preventDefault();
+        redirectBack();
+      });
+
+      if (navigator.onLine) {
+        redirectBack();
+      }
+
+      window.addEventListener("online", redirectBack);
+    </script>
+  </body>
+</html>
