@@ -37,8 +37,11 @@ const Step1BasicDetails = ({ cuisineOptions, dietaryOptions }) => {
     );
   };
 
-  const dietaryLabels = watch("dietaryLabels");
+  const dietaryLabels = watch("dietaryLabels") || [];
+  
+  // Watch for both the new file and the existing DB URL
   const thumbnailFile = watch("thumbnailFile");
+  const existingThumbnailUrl = watch("existingThumbnailUrl");
 
   const {
     fields: linkFields,
@@ -56,6 +59,18 @@ const Step1BasicDetails = ({ cuisineOptions, dietaryOptions }) => {
       shouldValidate: true,
     });
   };
+
+  // Determine what to show in the preview box
+  let previewUrl = null;
+  let displayFileName = "";
+
+  if (thumbnailFile instanceof File) {
+    previewUrl = URL.createObjectURL(thumbnailFile);
+    displayFileName = thumbnailFile.name;
+  } else if (existingThumbnailUrl) {
+    previewUrl = existingThumbnailUrl;
+    displayFileName = "Current Image"; // Fallback text for DB images
+  }
 
   return (
     <div className="space-y-8 p-1">
@@ -241,37 +256,39 @@ const Step1BasicDetails = ({ cuisineOptions, dietaryOptions }) => {
           id="thumbnailFile"
           className="hidden"
           {...register("thumbnailFile", {
-            validate: (v) =>
-              v instanceof File || thumbnailFile instanceof File
-                ? true
-                : "Thumbnail image is required",
+            validate: (v) => {
+              if (v instanceof File || thumbnailFile instanceof File) return true;
+              if (existingThumbnailUrl) return true;
+              return "Thumbnail image is required";
+            }
           })}
           onChange={handleThumbnailChange}
         />
-
         <label
           htmlFor="thumbnailFile"
-          className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 cursor-pointer transition-all duration-200 
-            ${errors.thumbnailFile ? 'border-error bg-error/5' : 'border-base-300 hover:border-orange-400 hover:bg-orange-50/50'}
+          className={`relative flex flex-col items-center justify-center border-2 rounded-xl cursor-pointer transition-all duration-200 overflow-hidden w-full h-64
+            ${previewUrl ? 'border-solid border-base-200' : 'border-dashed border-base-300 hover:border-orange-400 hover:bg-orange-50/50'}
+            ${errors.thumbnailFile && !previewUrl ? 'border-error bg-error/5' : ''}
           `}
         >
-            {thumbnailFile ? (
-                <div className="flex flex-col items-center gap-4 w-full">
-                    <div className="w-full max-w-xs aspect-video rounded-lg overflow-hidden shadow-sm border border-base-200">
-                        <img
-                        src={URL.createObjectURL(thumbnailFile)}
+            {previewUrl ? (
+                // Replaced aspect-video with w-full h-full
+                <div className="w-full h-full relative group bg-base-200">
+                    <img
+                        src={previewUrl}
                         alt="Preview"
                         className="w-full h-full object-cover"
-                        />
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-success font-medium">
-                        <FaImage />
-                        <span className="truncate max-w-[200px]">{thumbnailFile.name}</span>
-                        <span className="text-base-content/50 font-normal">(Click to change)</span>
+                    />
+                    
+                    {/* Dark Hover Overlay */}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center text-white gap-2">
+                        <FaImage className="w-8 h-8 mb-1" />
+                        <span className="font-semibold tracking-wide">Click to change thumbnail</span>
+                        <span className="text-sm opacity-80 max-w-[80%] truncate">{displayFileName}</span>
                     </div>
                 </div>
             ) : (
-                <div className="flex flex-col items-center text-center gap-2">
+                <div className="flex flex-col items-center justify-center h-full w-full text-center gap-2">
                     <div className="p-3 bg-orange-100 text-orange-600 rounded-full mb-1">
                         <FaUpload className="w-6 h-6" />
                     </div>
@@ -280,6 +297,7 @@ const Step1BasicDetails = ({ cuisineOptions, dietaryOptions }) => {
                 </div>
             )}
         </label>
+        
         {errors.thumbnailFile && (
           <span className="text-xs text-error mt-1 ml-1">{errors.thumbnailFile.message}</span>
         )}

@@ -17,6 +17,7 @@ import Step1BasicDetails from "../../components/addRecipe/Step1BasicDetails";
 import Step2Ingredients from "../../components/addRecipe/Step2Ingredients";
 import Step3Instructions from "../../components/addRecipe/Step3Instructions";
 import Step4Preview from "../../components/addRecipe/Step4Preview";
+import { CUISINE_OPTIONS, DIETARY_OPTIONS, UNIT_OPTIONS } from "../../constants";
 import HomeLayout from "../../layouts/HomeLayout";
 
 const STEPS = [
@@ -40,22 +41,6 @@ const STEPS = [
     title: "Preview",
     description: "Review changes before saving",
   },
-];
-
-const cuisineOptions = [
-  "indian", "italian", "chinese", "mexican", "thai", "japanese",
-  "french", "mediterranean", "american", "korean", "vietnamese",
-  "middle-eastern", "british", "spanish", "german", "greek",
-];
-
-const dietaryOptions = [
-  "vegetarian", "vegan", "keto", "paleo", "gluten-free", "dairy-free",
-  "low-carb", "high-protein", "sugar-free", "organic", "raw",
-  "mediterranean", "low-fat",
-];
-
-const unitOptions = [
-  "g", "kg", "ml", "l", "cup", "tbsp", "tsp", "pc", "oz", "lb",
 ];
 
 export default function EditRecipe() {
@@ -127,8 +112,10 @@ export default function EditRecipe() {
         steps: recipe.steps?.map((step, idx) => ({
           id: `s-${idx}`,
           text: step.instruction || "",
+          existingImageUrl: step.imageUrl?.secure_url || "",
           imageFile: null // null, backend should keep old image if no new one is provided
         })) || [],
+        existingThumbnailUrl: recipe.thumbnail?.secure_url,
         thumbnailFile: null, // null unless user uploads a new one
         externalMediaLinks: recipe.externalMediaLinks || [],
       });
@@ -216,9 +203,6 @@ export default function EditRecipe() {
           : undefined;
 
       const thumbnailFile = data.thumbnailFile || null;
-      const stepImages = (data.steps || [])
-        .map((step) => step.imageFile || null)
-        .filter(Boolean);
 
       const formData = new FormData();
 
@@ -245,8 +229,11 @@ export default function EditRecipe() {
         formData.append("thumbnailFile", thumbnailFile);
       }
 
-      stepImages.forEach((imgFile) => {
-        if (imgFile) formData.append("stepImages", imgFile);
+      // Ensure index is maintained so the backend knows which step the image belongs to
+      (data.steps || []).forEach((step, index) => {
+        if (step.imageFile) {
+          formData.append(`stepImage_${index}`, step.imageFile); 
+        }
       });
 
       // Submit the update
@@ -343,12 +330,12 @@ export default function EditRecipe() {
             <div className="card-body p-6 md:p-8">
               {currentStep === 1 && (
                 <Step1BasicDetails
-                  cuisineOptions={cuisineOptions}
-                  dietaryOptions={dietaryOptions}
+                  cuisineOptions={CUISINE_OPTIONS}
+                  dietaryOptions={DIETARY_OPTIONS}
                 />
               )}
               {currentStep === 2 && (
-                <Step2Ingredients unitOptions={unitOptions} />
+                <Step2Ingredients unitOptions={UNIT_OPTIONS} />
               )}
               {currentStep === 3 && <Step3Instructions />}
               {currentStep === 4 && <Step4Preview />}
