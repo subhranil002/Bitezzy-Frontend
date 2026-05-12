@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FaArrowRight,
   FaCrown,
@@ -9,17 +9,30 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
+import getSubscribedApi from "../../apis/user/getSubscribedApi";
+
 function ProfileTabs({ profileData }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("subscribed");
   const [subscribedChefs, setSubscribedChefs] = useState([]);
 
+  useEffect(() => {
+    (async () => {
+      const res = await getSubscribedApi(profileData._id.toString());
+      if (res.success) {
+        setSubscribedChefs(res.data);
+      }
+    })();
+
+    return () => {
+      setSubscribedChefs([]);
+    };
+  }, []);
+
   const tabs = [
     { key: "subscribed", label: "Subscribed", icon: FaUsers },
     { key: "reviews", label: "Reviews Given", icon: FaRegClock },
   ];
-
-  // TODO: Get Subscribed Chefs
 
   return (
     <div className="w-full">

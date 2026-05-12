@@ -7,14 +7,11 @@ import HomeLayout from "../layouts/HomeLayout";
 export default function Home() {
   return (
     <HomeLayout>
-      {/* Vertical spacing between sections */}
-      <div className="space-y-12">
-        {/* Top banner / introduction section */}
-        <HeroSection />
+      {/* Top banner / introduction section */}
+      <HeroSection />
 
-        {/* Recipe category carousels */}
-        <RecipeCarousels />
-      </div>
+      {/* Recipe category carousels */}
+      <RecipeCarousels />
     </HomeLayout>
   );
 }

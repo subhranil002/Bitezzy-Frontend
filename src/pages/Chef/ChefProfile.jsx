@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FaBriefcase,
   FaCalendarAlt,
@@ -14,6 +14,7 @@ import {
 } from "react-icons/fa";
 import { useSelector } from "react-redux";
 
+import getMyRecipesApi from "../../apis/user/getMyRecipesApi";
 import subscribeApi from "../../apis/user/subscribeApi";
 import unsubscribeApi from "../../apis/user/unsubscribeApi";
 import EditChefProfileDialog from "../../components/chefProfile/editChefProfileDialog";
@@ -27,7 +28,18 @@ function ChefProfile({ profileData }) {
   const { userData } = useSelector((state) => state.auth);
   const [myRecipes, setMyRecipes] = useState([]);
 
-  // TODO: Get My Recipes
+  useEffect(() => {
+    (async () => {
+      const res = await getMyRecipesApi(profileData._id.toString());
+      if (res.success) {
+        setMyRecipes(res.data);
+      }
+    })();
+
+    return () => {
+      setMyRecipes([]);
+    };
+  }, []);
 
   const isOwnProfile = userData?._id.toString() === profileData?._id.toString();
 
