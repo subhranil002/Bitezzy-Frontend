@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   FaBriefcase,
   FaCalendarAlt,
@@ -14,7 +14,6 @@ import {
 } from "react-icons/fa";
 import { useSelector } from "react-redux";
 
-import getMyRecipesApi from "../../apis/user/getMyRecipesApi";
 import subscribeApi from "../../apis/user/subscribeApi";
 import unsubscribeApi from "../../apis/user/unsubscribeApi";
 import EditChefProfileDialog from "../../components/chefProfile/editChefProfileDialog";
@@ -26,20 +25,6 @@ import HomeLayout from "../../layouts/HomeLayout";
 
 function ChefProfile({ profileData }) {
   const { userData } = useSelector((state) => state.auth);
-  const [myRecipes, setMyRecipes] = useState([]);
-
-  useEffect(() => {
-    (async () => {
-      const res = await getMyRecipesApi(profileData._id.toString());
-      if (res.success) {
-        setMyRecipes(res.data);
-      }
-    })();
-
-    return () => {
-      setMyRecipes([]);
-    };
-  }, []);
 
   const isOwnProfile = userData?._id.toString() === profileData?._id.toString();
 
@@ -51,9 +36,9 @@ function ChefProfile({ profileData }) {
   const [loading, setLoading] = useState(false);
 
   const getAverageRating = () => {
-    if (!myRecipes || myRecipes.length === 0) return "N/A";
+    if (!profileData?.recipes || profileData.recipes.length === 0) return "N/A";
 
-    const allRatings = myRecipes.flatMap(
+    const allRatings = profileData.recipes.flatMap(
       (recipe) => recipe?.reviews?.map((rev) => rev.rating) || [],
     );
 
@@ -72,7 +57,7 @@ function ChefProfile({ profileData }) {
     },
     {
       label: "Recipes",
-      value: myRecipes.length || 0,
+      value: profileData?.recipes?.length || 0,
     },
     {
       label: "Chef Type",
@@ -379,9 +364,9 @@ function ChefProfile({ profileData }) {
                   <FaUtensils className="text-orange-500" />
                   Recipes by {profileData?.profile?.name}
                 </h3>
-                {myRecipes.length ? (
+                {profileData?.recipes?.length ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {myRecipes.map((recipe, idx) => (
+                    {profileData.recipes.map((recipe, idx) => (
                       <div className="flex justify-center" key={idx}>
                         <RecipeCard
                           key={recipe._id.toString()}

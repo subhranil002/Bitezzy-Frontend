@@ -24,69 +24,68 @@ import HomeLayout from "../../layouts/HomeLayout";
 import { getRecipeById, resetRecipe } from "../../redux/slices/recipeSlice";
 
 // --- MOCK DATA FOR TESTING CAROUSEL ---
-  const dummySimilarRecipes = [
-    {
-      _id: "mock1",
-      chefId: "64xyz123abc",
-      title: "Spicy Garlic Butter Shrimp",
-      description: "A fast, flavorful seafood dish perfect for weeknights.",
-      totalCookingTime: 25,
-      servings: 2,
-      cuisine: "Asian",
-      dietaryLabels: ["Keto", "High-Protein", "Pescatarian"],
-      isPremium: true,
-      thumbnail: {
-        secure_url:
-          "https://images.unsplash.com/photo-1625937751876-451522f98642?w=500&q=80",
-      },
+const dummySimilarRecipes = [
+  {
+    _id: "mock1",
+    chefId: "64xyz123abc",
+    title: "Spicy Garlic Butter Shrimp",
+    description: "A fast, flavorful seafood dish perfect for weeknights.",
+    totalCookingTime: 25,
+    servings: 2,
+    cuisine: "Asian",
+    dietaryLabels: ["Keto", "High-Protein", "Pescatarian"],
+    isPremium: true,
+    thumbnail: {
+      secure_url:
+        "https://images.unsplash.com/photo-1625937751876-451522f98642?w=500&q=80",
     },
-    {
-      _id: "mock2",
-      chefId: "64xyz123abc",
-      title: "Creamy Tuscan Chicken Miso",
-      description:
-        "Rich, creamy chicken infused with incredible umami flavors.",
-      totalCookingTime: 40,
-      servings: 4,
-      cuisine: "Italian-Fusion",
-      dietaryLabels: ["Gluten-Free"],
-      isPremium: false,
-      thumbnail: {
-        secure_url:
-          "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500&q=80",
-      },
+  },
+  {
+    _id: "mock2",
+    chefId: "64xyz123abc",
+    title: "Creamy Tuscan Chicken Miso",
+    description: "Rich, creamy chicken infused with incredible umami flavors.",
+    totalCookingTime: 40,
+    servings: 4,
+    cuisine: "Italian-Fusion",
+    dietaryLabels: ["Gluten-Free"],
+    isPremium: false,
+    thumbnail: {
+      secure_url:
+        "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500&q=80",
     },
-    {
-      _id: "mock3",
-      chefId: "64xyz123def",
-      title: "Roasted Red Pepper Pasta",
-      description: "A vibrant, smoky vegan pasta dish that takes 20 minutes.",
-      totalCookingTime: 20,
-      servings: 3,
-      cuisine: "Italian",
-      dietaryLabels: ["Vegan", "Dairy-Free"],
-      isPremium: false,
-      thumbnail: {
-        secure_url:
-          "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=500&q=80",
-      },
+  },
+  {
+    _id: "mock3",
+    chefId: "64xyz123def",
+    title: "Roasted Red Pepper Pasta",
+    description: "A vibrant, smoky vegan pasta dish that takes 20 minutes.",
+    totalCookingTime: 20,
+    servings: 3,
+    cuisine: "Italian",
+    dietaryLabels: ["Vegan", "Dairy-Free"],
+    isPremium: false,
+    thumbnail: {
+      secure_url:
+        "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=500&q=80",
     },
-    {
-      _id: "mock4",
-      chefId: "64xyz123ghi",
-      title: "Classic Beef Wellington",
-      description: "A show-stopping centerpiece for your next dinner party.",
-      totalCookingTime: 120,
-      servings: 6,
-      cuisine: "British",
-      dietaryLabels: ["High-Protein"],
-      isPremium: true,
-      thumbnail: {
-        secure_url:
-          "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=500&q=80",
-      },
+  },
+  {
+    _id: "mock4",
+    chefId: "64xyz123ghi",
+    title: "Classic Beef Wellington",
+    description: "A show-stopping centerpiece for your next dinner party.",
+    totalCookingTime: 120,
+    servings: 6,
+    cuisine: "British",
+    dietaryLabels: ["High-Protein"],
+    isPremium: true,
+    thumbnail: {
+      secure_url:
+        "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=500&q=80",
     },
-  ];
+  },
+];
 
 function RecipeDetail() {
   const { id } = useParams();
@@ -245,7 +244,7 @@ function RecipeDetail() {
           {
             icon: <FaFire />,
             label: "Calories",
-            value: recipe.nutrition.calorie,
+            value: `${recipe.nutrition.calorie} kcal`,
           },
         ]
       : []),
@@ -478,7 +477,7 @@ function RecipeDetail() {
                               </td>
 
                               <td className="text-right text-gray-600">
-                                {recipe?.nutrition?.calorie || "-"}
+                                {`${recipe?.nutrition?.calorie} k || "-"cal`}
                               </td>
                             </tr>
 
@@ -488,7 +487,7 @@ function RecipeDetail() {
                               </td>
 
                               <td className="text-right text-gray-600">
-                                {recipe?.nutrition?.carbohydrate || "-"}
+                                {`${recipe?.nutrition?.carbohydrate || "-"} g`}
                               </td>
                             </tr>
 
@@ -498,7 +497,7 @@ function RecipeDetail() {
                               </td>
 
                               <td className="text-right text-gray-600">
-                                {recipe?.nutrition?.protein || "-"}
+                                {`${recipe?.nutrition?.protein || "-"} g`}
                               </td>
                             </tr>
 
@@ -506,7 +505,7 @@ function RecipeDetail() {
                               <td className="font-medium text-gray-800">Fat</td>
 
                               <td className="text-right text-gray-600">
-                                {recipe?.nutrition?.fat || "-"}
+                                {`${recipe?.nutrition?.fat || "-"} g`}
                               </td>
                             </tr>
 
@@ -516,7 +515,7 @@ function RecipeDetail() {
                               </td>
 
                               <td className="text-right text-gray-600">
-                                {recipe?.nutrition?.fiber || "-"}
+                                {`${recipe?.nutrition?.fiber || "-"} g`}
                               </td>
                             </tr>
 
@@ -526,7 +525,7 @@ function RecipeDetail() {
                               </td>
 
                               <td className="text-right text-gray-600">
-                                {recipe?.nutrition?.sugar || "-"}
+                                {`${recipe?.nutrition?.sugar || "-"} g`}
                               </td>
                             </tr>
                           </tbody>

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 
+import getMyRecipesApi from "../apis/user/getMyRecipesApi";
+import getSubscribedApi from "../apis/user/getSubscribedApi";
 import getUserByIdApi from "../apis/user/getUserByIdApi";
 import Loading from "../components/Loading";
 import ChefProfile from "./Chef/ChefProfile";
@@ -18,21 +20,53 @@ export default function Profile() {
 
   // Fetch profile data when id changes or user updates
   useEffect(() => {
-    setLoading(true);
+    if (!userData?._id || !id) return;
 
-    // If viewing own profile, use data from Redux store
-    if (userData._id.toString() === id) {
-      setCurrUser(userData);
-      setLoading(false);
-    } else {
-      // Otherwise fetch user data by id
-      (async () => {
-        const res = await getUserByIdApi(id);
-        setCurrUser(res.data);
+    (async () => {
+      try {
+        setLoading(true);
+
+        // If viewing own profile
+        if (userData._id.toString() === id) {
+          const updatedUser = {
+            ...userData,
+            profile: { ...userData.profile },
+          };
+
+          const subscribedRes = await getSubscribedApi(userData._id.toString());
+          updatedUser.profile.subscribed = subscribedRes.data;
+
+          if (updatedUser.role === "CHEF") {
+            const recipeRes = await getMyRecipesApi(userData._id.toString());
+            updatedUser.recipes = recipeRes.data;
+          }
+
+          setCurrUser(updatedUser);
+        } else {
+          // Fetch another user's profile
+          const res = await getUserByIdApi(id);
+
+          const fetchedUser = {
+            ...res.data,
+            profile: { ...res.data.profile },
+          };
+
+          if (fetchedUser.role === "CHEF") {
+            const recipesRes = await getMyRecipesApi(
+              fetchedUser._id.toString(),
+            );
+            fetchedUser.recipes = recipesRes.data;
+          }
+
+          setCurrUser(fetchedUser);
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
         setLoading(false);
-      })();
-    }
-  }, [id, userData.updatedAt]);
+      }
+    })();
+  }, [id, userData?.updatedAt]);
 
   // Show loading spinner while fetching
   if (loading) return <Loading />;
