@@ -56,14 +56,14 @@ export default function RecipeCarousels() {
     (async () => {
       setLoading(true);
 
-      if (trendingNow.length === 0) await dispatch(getTrending());
-      if (freshAndNew.length === 0) await dispatch(getFreshAndNew());
-      if (quickAndEasy.length === 0) await dispatch(getQuickAndEasy());
-      if (premiumPicks.length === 0) await dispatch(getPremium());
+      if (trendingNow.length === 0) await dispatch(getTrending(12));
+      if (freshAndNew.length === 0) await dispatch(getFreshAndNew(12));
+      if (quickAndEasy.length === 0) await dispatch(getQuickAndEasy(12));
+      if (premiumPicks.length === 0) await dispatch(getPremium(12));
 
       // Recommended section loads only for logged-in users
       if (isLoggedIn && recommendedForYou?.length === 0)
-        await dispatch(getRecommended());
+        await dispatch(getRecommended(12));
 
       setLoading(false);
     })();

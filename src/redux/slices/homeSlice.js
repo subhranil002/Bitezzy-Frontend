@@ -15,9 +15,9 @@ const initialState = {
   premiumPicks: [],
 };
 
-export const getTrending = createAsyncThunk("recipe/getTrending", async () => {
+export const getTrending = createAsyncThunk("recipe/getTrending", async (limit) => {
   try {
-    return await getTrendingRecipesApi();
+    return await getTrendingRecipesApi(limit);
   } catch (error) {
     console.error(error);
   }
@@ -25,9 +25,9 @@ export const getTrending = createAsyncThunk("recipe/getTrending", async () => {
 
 export const getFreshAndNew = createAsyncThunk(
   "recipe/getFreshAndNew",
-  async () => {
+  async (limit) => {
     try {
-      return await getFreshAndNewRecipes();
+      return await getFreshAndNewRecipes(limit);
     } catch (error) {
       console.error(error);
     }
@@ -36,9 +36,9 @@ export const getFreshAndNew = createAsyncThunk(
 
 export const getRecommended = createAsyncThunk(
   "recipe/getRecommended",
-  async () => {
+  async (limit) => {
     try {
-      return await getRecommendedRecipesApi();
+      return await getRecommendedRecipesApi(limit);
     } catch (error) {
       console.error(error);
     }
@@ -47,18 +47,18 @@ export const getRecommended = createAsyncThunk(
 
 export const getQuickAndEasy = createAsyncThunk(
   "recipe/getQuickAndEasy",
-  async () => {
+  async (limit) => {
     try {
-      return await getQuickAndEasyRecipesApi();
+      return await getQuickAndEasyRecipesApi(limit);
     } catch (error) {
       console.error(error);
     }
   }
 );
 
-export const getPremium = createAsyncThunk("recipe/getPremium", async () => {
+export const getPremium = createAsyncThunk("recipe/getPremium", async (limit) => {
   try {
-    return await getPremiumRecipesApi();
+    return await getPremiumRecipesApi(limit);
   } catch (error) {
     console.error(error);
   }

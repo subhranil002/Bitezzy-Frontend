@@ -16,76 +16,13 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
+import getSimilarRecipesApi from "../../apis/recipe/getSimilarRecipesApi";
 import likeRecipeApi from "../../apis/recipe/likeRecipeApi";
 import unlikeRecipeApi from "../../apis/recipe/unlikeRecipeApi";
 import Loading from "../../components/Loading";
 import RecipeCarousel from "../../components/recipe/RecipeCarousel";
 import HomeLayout from "../../layouts/HomeLayout";
 import { getRecipeById, resetRecipe } from "../../redux/slices/recipeSlice";
-
-// --- MOCK DATA FOR TESTING CAROUSEL ---
-const dummySimilarRecipes = [
-  {
-    _id: "mock1",
-    chefId: "64xyz123abc",
-    title: "Spicy Garlic Butter Shrimp",
-    description: "A fast, flavorful seafood dish perfect for weeknights.",
-    totalCookingTime: 25,
-    servings: 2,
-    cuisine: "Asian",
-    dietaryLabels: ["Keto", "High-Protein", "Pescatarian"],
-    isPremium: true,
-    thumbnail: {
-      secure_url:
-        "https://images.unsplash.com/photo-1625937751876-451522f98642?w=500&q=80",
-    },
-  },
-  {
-    _id: "mock2",
-    chefId: "64xyz123abc",
-    title: "Creamy Tuscan Chicken Miso",
-    description: "Rich, creamy chicken infused with incredible umami flavors.",
-    totalCookingTime: 40,
-    servings: 4,
-    cuisine: "Italian-Fusion",
-    dietaryLabels: ["Gluten-Free"],
-    isPremium: false,
-    thumbnail: {
-      secure_url:
-        "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500&q=80",
-    },
-  },
-  {
-    _id: "mock3",
-    chefId: "64xyz123def",
-    title: "Roasted Red Pepper Pasta",
-    description: "A vibrant, smoky vegan pasta dish that takes 20 minutes.",
-    totalCookingTime: 20,
-    servings: 3,
-    cuisine: "Italian",
-    dietaryLabels: ["Vegan", "Dairy-Free"],
-    isPremium: false,
-    thumbnail: {
-      secure_url:
-        "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=500&q=80",
-    },
-  },
-  {
-    _id: "mock4",
-    chefId: "64xyz123ghi",
-    title: "Classic Beef Wellington",
-    description: "A show-stopping centerpiece for your next dinner party.",
-    totalCookingTime: 120,
-    servings: 6,
-    cuisine: "British",
-    dietaryLabels: ["High-Protein"],
-    isPremium: true,
-    thumbnail: {
-      secure_url:
-        "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=500&q=80",
-    },
-  },
-];
 
 function RecipeDetail() {
   const { id } = useParams();
@@ -101,6 +38,7 @@ function RecipeDetail() {
   });
   const [madeIt, setMadeIt] = useState(false);
   const [madeItCount, setMadeItCount] = useState(0);
+  const [similarRecipes, setSimilarRecipes] = useState([]);
 
   // --- Recipe Review State ---
   const [showReview, setShowReview] = useState(false);
@@ -147,28 +85,38 @@ function RecipeDetail() {
   }, [error, navigate]);
 
   useEffect(() => {
-    if (!recipe?.ingredients) return;
+    if (!recipe) return;
 
-    const totalCost = recipe.ingredients.reduce((sum, ing) => {
-      const price = Number(ing?.marketPrice) || 0;
-      return sum + price;
-    }, 0);
+    if (!similarRecipes.length) {
+      getSimilarRecipesApi(recipe._id.toString(), 5).then((res) =>
+        setSimilarRecipes(res.data),
+      );
+    }
 
-    const costPerServing =
-      recipe?.servings && recipe.servings > 0
-        ? totalCost / recipe.servings
-        : totalCost;
+    if (recipe?.ingredients) {
+      const totalCost = recipe.ingredients.reduce((sum, ing) => {
+        const price = Number(ing?.marketPrice) || 0;
+        return sum + price;
+      }, 0);
 
-    setCost({ total: totalCost, perServing: costPerServing });
+      const costPerServing =
+        recipe?.servings && recipe.servings > 0
+          ? totalCost / recipe.servings
+          : totalCost;
 
-    const reviews = recipe?.reviews || [];
-    const count = reviews.length;
-    const avg =
-      count > 0
-        ? reviews.reduce((s, r) => s + (Number(r?.rating) || 0), 0) / count
-        : 0;
+      setCost({ total: totalCost, perServing: costPerServing });
+    }
 
-    setStats({ averageRating: Number(avg.toFixed(1)), reviewCount: count });
+    if (recipe?.reviews) {
+      const reviews = recipe?.reviews || [];
+      const count = reviews.length;
+      const avg =
+        count > 0
+          ? reviews.reduce((s, r) => s + (Number(r?.rating) || 0), 0) / count
+          : 0;
+
+      setStats({ averageRating: Number(avg.toFixed(1)), reviewCount: count });
+    }
   }, [recipe]);
 
   const toggleFav = () => {
@@ -477,7 +425,7 @@ function RecipeDetail() {
                               </td>
 
                               <td className="text-right text-gray-600">
-                                {`${recipe?.nutrition?.calorie} k || "-"cal`}
+                                {`${recipe?.nutrition?.calorie || "-"} kcal`}
                               </td>
                             </tr>
 
@@ -785,8 +733,8 @@ function RecipeDetail() {
               </div>
             </div>
 
-            {/* --- CAROUSEL IMPLEMENTATION --- */}
-            {dummySimilarRecipes.length > 0 && (
+            {/* --- SIMILAR RECIPES CAROUSEL --- */}
+            {similarRecipes.length > 0 && (
               <div className="mt-20 pt-10 border-t-2 border-orange-200/50 relative z-10 print-only-steps">
                 <RecipeCarousel
                   title={
@@ -804,7 +752,7 @@ function RecipeDetail() {
                       </div>
                     </div>
                   }
-                  recipes={dummySimilarRecipes}
+                  recipes={similarRecipes}
                 />
               </div>
             )}
