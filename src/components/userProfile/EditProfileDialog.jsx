@@ -350,8 +350,6 @@ export default function EditProfileDialog() {
                   className="select select-bordered w-full border-gray-200 focus:border-orange-400 rounded-xl uppercase"
                   {...register("cuisine")}
                 >
-                  <option value="">Select Cuisine</option>
-
                   {CUISINE_OPTIONS.map((c) => (
                     <option key={c} value={c}>
                       {c}

@@ -84,7 +84,7 @@ export default function EditChefProfileDialog() {
   const [dietaryDraft, setDietaryDraft] = useState("");
   const [allergenDraft, setAllergenDraft] = useState("");
   const [educationDraft, setEducationDraft] = useState({
-    institute: "",
+    institution: "",
     degree: "",
     fieldOfStudy: "",
     startYear: "",
@@ -124,12 +124,12 @@ export default function EditChefProfileDialog() {
       dietaryLabels: profile?.dietaryLabels?.map((v) => ({ value: v })) ?? [],
       allergens: profile?.allergens?.map((v) => ({ value: v })) ?? [],
 
-      specialty: chefProfile?.specialty || "",
+      speciality: chefProfile?.speciality || "",
       subscriptionPrice: chefProfile?.subscriptionPrice ?? "",
 
       education:
         chefProfile?.education?.map((item) => ({
-          institute: item?.institute ?? "",
+          institution: item?.institution ?? "",
           degree: item?.degree ?? "",
           fieldOfStudy: item?.fieldOfStudy ?? "",
           startYear: item?.startYear ?? "",
@@ -272,12 +272,12 @@ export default function EditChefProfileDialog() {
    * Handles adding education entries.
    */
   const handleAddEducation = () => {
-    const { institute, degree } = educationDraft;
+    const { institution, degree } = educationDraft;
 
-    if (!institute || !degree) {
+    if (!institution || !degree) {
       setError("education", {
         type: "manual",
-        message: "Institute and Degree are required",
+        message: "Institution and Degree are required",
       });
       return;
     }
@@ -306,7 +306,7 @@ export default function EditChefProfileDialog() {
 
     const exists = current.some(
       (item) =>
-        (item.institute || "").toLowerCase() === institute.toLowerCase() &&
+        (item.institution || "").toLowerCase() === institution.toLowerCase() &&
         (item.degree || "").toLowerCase() === degree.toLowerCase(),
     );
 
@@ -327,7 +327,7 @@ export default function EditChefProfileDialog() {
     });
 
     setEducationDraft({
-      institute: "",
+      institution: "",
       degree: "",
       fieldOfStudy: "",
       startYear: "",
@@ -460,35 +460,31 @@ export default function EditChefProfileDialog() {
     try {
       const payload = {
         avatar: data.avatar || null,
-        profile: {
-          name: data.name,
-          bio: data.bio,
-          cuisine: data.cuisine,
-          dietaryLabels: data.dietaryLabels.map((i) => i.value.toLowerCase()),
-          allergens: data.allergens.map((i) => i.value.toLowerCase()),
-        },
-        chefProfile: {
-          specialty: data.specialty,
-          subscriptionPrice: Number(data.subscriptionPrice) || 0,
-          education: data.education.map((item) => ({
-            institute: item.institute,
-            degree: item.degree,
-            fieldOfStudy: item.fieldOfStudy,
-            startYear: item.startYear,
-            endYear: item.endYear,
-            description: item.description,
-          })),
-          experience: data.experience.map((item) => ({
-            title: item.title,
-            employmentType: item.employmentType,
-            companyOrOrganization: item.companyOrOrganization,
-            isCurrentlyWorking: !!item.isCurrentlyWorking,
-            startYear: item.startYear,
-            endYear: item.isCurrentlyWorking ? "" : item.endYear,
-            description: item.description,
-          })),
-          externalLinks: data.externalLinks.map((i) => i.value),
-        },
+        name: data.name,
+        bio: data.bio,
+        cuisine: data.cuisine,
+        dietaryLabels: data.dietaryLabels.map((i) => i.value.toLowerCase()),
+        allergens: data.allergens.map((i) => i.value.toLowerCase()),
+        speciality: data.speciality,
+        subscriptionPrice: Number(data.subscriptionPrice) || 0,
+        education: data.education.map((item) => ({
+          institution: item.institution,
+          degree: item.degree,
+          fieldOfStudy: item.fieldOfStudy,
+          startYear: item.startYear,
+          endYear: item.endYear,
+          description: item.description,
+        })),
+        experience: data.experience.map((item) => ({
+          title: item.title,
+          employmentType: item.employmentType,
+          companyOrOrganization: item.companyOrOrganization,
+          isCurrentlyWorking: !!item.isCurrentlyWorking,
+          startYear: item.startYear,
+          endYear: item.isCurrentlyWorking ? "" : item.endYear,
+          description: item.description,
+        })),
+        externalLinks: data.externalLinks.map((i) => i.value),
       };
 
       // Close dialog immediately
@@ -662,8 +658,6 @@ export default function EditChefProfileDialog() {
                   className="select select-bordered w-full border-gray-200 focus:border-orange-400 rounded-xl uppercase"
                   {...register("cuisine")}
                 >
-                  <option value="">Select Cuisine</option>
-
                   {CUISINE_OPTIONS.map((c) => (
                     <option key={c} value={c}>
                       {c}
@@ -786,20 +780,18 @@ export default function EditChefProfileDialog() {
                 Professional Background
               </h4>
 
-              {/* Culinary Specialty */}
+              {/* Culinary Speciality */}
               <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-semibold text-gray-600 flex items-center gap-2">
-                    <FaUtensils /> Culinary Specialty
+                    <FaUtensils /> Culinary Speciality
                   </span>
                 </label>
 
                 <select
                   className="select select-bordered w-full border-gray-200 focus:border-orange-400 rounded-xl uppercase"
-                  {...register("specialty")}
+                  {...register("speciality")}
                 >
-                  <option value="">Select Specialty</option>
-
                   {CUISINE_OPTIONS.map((c) => (
                     <option key={c} value={c}>
                       {c}
@@ -807,9 +799,9 @@ export default function EditChefProfileDialog() {
                   ))}
                 </select>
 
-                {errors.specialty && (
+                {errors.speciality && (
                   <span className="text-red-500 text-xs mt-1">
-                    {errors.specialty.message}
+                    {errors.speciality.message}
                   </span>
                 )}
               </div>
@@ -851,13 +843,13 @@ export default function EditChefProfileDialog() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                   <input
                     className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
-                    placeholder="Institute Name"
-                    value={educationDraft.institute}
+                    placeholder="Institution Name"
+                    value={educationDraft.institution}
                     onChange={(e) => {
                       clearErrors("education");
                       setEducationDraft((prev) => ({
                         ...prev,
-                        institute: e.target.value,
+                        institution: e.target.value,
                       }));
                     }}
                   />
@@ -960,7 +952,7 @@ export default function EditChefProfileDialog() {
                             {field.degree} - {field.fieldOfStudy}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {field.institute}
+                            {field.institution}
                           </p>
                           <p className="text-xs text-gray-500">
                             {field.startYear} - {field.endYear || "Present"}
@@ -1018,7 +1010,6 @@ export default function EditChefProfileDialog() {
                       }));
                     }}
                   >
-                    <option value="">Select Employment Type</option>
                     {EMPLOYMENT_TYPE_OPTIONS.map((type) => (
                       <option key={type} value={type}>
                         {type}

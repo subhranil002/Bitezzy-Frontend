@@ -43,7 +43,7 @@ function ProfileStats({ profileData }) {
     {
       id: "cuisine",
       icon: FaGlobe,
-      label: "Cuisine",
+      label: "Favourite Cuisine",
       value: profileData?.profile?.cuisine || "N/A",
       iconColor: "text-purple-500",
       iconBg: "bg-purple-50",

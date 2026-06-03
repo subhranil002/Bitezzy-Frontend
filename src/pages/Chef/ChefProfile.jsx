@@ -8,10 +8,12 @@ import {
   FaHeart,
   FaLink,
   FaLock,
+  FaRupeeSign,
   FaStar,
   FaUsers,
   FaUtensils,
 } from "react-icons/fa";
+import { GiTakeMyMoney } from "react-icons/gi";
 import { useSelector } from "react-redux";
 
 import subscribeApi from "../../apis/user/subscribeApi";
@@ -159,8 +161,8 @@ function ChefProfile({ profileData }) {
                     </span>
                     <div className="badge badge-lg h-auto py-2 px-4 gap-2 bg-orange-50 border-orange-200 text-orange-700 shadow-sm rounded-xl">
                       <FaUtensils className="w-3 h-3" />
-                      <span className="font-bold text-base">
-                        {profileData?.profile?.cuisine || "Multi-Cuisine"}
+                      <span className="font-bold text-base uppercase">
+                        {profileData?.chefProfile?.speciality || "-"}
                       </span>
                     </div>
                   </div>
@@ -223,6 +225,20 @@ function ChefProfile({ profileData }) {
                     </span>
                   </div>
                 </div>
+
+                {/* My Subscription Price */}
+                {isOwnProfile && (
+                  <div className="mt-4 flex flex-col gap-3">
+                    <span className="text-sm font-bold text-gray-400 uppercase tracking-widest flex gap-2">
+                      <GiTakeMyMoney className="w-6 h-6" />
+                      My Subscription Price
+                    </span>
+                    <div className="badge badge-lg bg-orange-50 border-orange-200 text-orange-700">
+                      <FaRupeeSign className="w-3 h-3" />
+                      {profileData?.chefProfile?.subscriptionPrice || 0} / month
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-3 w-full md:w-auto shrink-0 min-w-[200px]">
