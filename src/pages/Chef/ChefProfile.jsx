@@ -15,9 +15,10 @@ import {
 } from "react-icons/fa";
 import { GiTakeMyMoney } from "react-icons/gi";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
-import subscribeApi from "../../apis/user/subscribeApi";
-import unsubscribeApi from "../../apis/user/unsubscribeApi";
+import createSubscriptionApi from "../../apis/user/createSubscriptionApi";
+import ConfirmSubscriptionDialog from "../../components/chefProfile/ConfirmSubscriptionDialog";
 import EditChefProfileDialog from "../../components/chefProfile/editChefProfileDialog";
 import RecipeCard from "../../components/recipe/RecipeCard";
 import ChangePasswordDialog from "../../components/userProfile/ChangePasswordDialog";
@@ -27,8 +28,8 @@ import HomeLayout from "../../layouts/HomeLayout";
 
 function ChefProfile({ profileData }) {
   const { userData } = useSelector((state) => state.auth);
-
   const isOwnProfile = userData?._id.toString() === profileData?._id.toString();
+  const navigate = useNavigate();
 
   const [subscribed, setSubscribed] = useState(
     userData?.profile?.subscribed?.some(
@@ -36,6 +37,38 @@ function ChefProfile({ profileData }) {
     ),
   );
   const [loading, setLoading] = useState(false);
+
+  const subscribe = async () => {
+    setLoading(true);
+    if (!subscribed) {
+      const subscription = await createSubscriptionApi({
+        chefId: profileData._id,
+      });
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY,
+        subscription_id: subscription.data.id,
+        name: "Bitezzy",
+        description: `Subscription to ${profileData.profile.name}`,
+        theme: {
+          color: "#f97316",
+        },
+        prefill: {
+          name: userData.profile.name,
+          email: userData.email,
+          contact: "+91",
+        },
+        handler: async function () {
+          navigate(`profile/${profileData._id}`);
+          setSubscribed(true);
+        },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    }
+    setLoading(false);
+  };
 
   const getAverageRating = () => {
     if (!profileData?.recipes || profileData.recipes.length === 0) return "N/A";
@@ -83,22 +116,6 @@ function ChefProfile({ profileData }) {
     return url;
   }
 
-  const subscribeToggle = async () => {
-    setLoading(true);
-    if (!subscribed) {
-      const res = await subscribeApi(profileData._id.toString());
-      if (res.success) {
-        setSubscribed(!subscribed);
-      }
-    } else {
-      const res = await unsubscribeApi(profileData._id.toString());
-      if (res.success) {
-        setSubscribed(!subscribed);
-      }
-    }
-    setLoading(false);
-  };
-
   return (
     <>
       {isOwnProfile && (
@@ -107,8 +124,13 @@ function ChefProfile({ profileData }) {
           <ChangePasswordDialog />
         </>
       )}
+      <ConfirmSubscriptionDialog
+        profileData={profileData}
+        loading={loading}
+        onConfirm={subscribe}
+      />
       <HomeLayout>
-        <div className="min-h-screen bg-linear-to-br from-orange-50 via-rose-50 to-amber-50">
+        <div className="min-h-screen bg-linear-to-br from-orange-50 via-rose-50 to-amber-50 md:mx-10">
           <div className="container mx-auto px-4 py-10">
             {/* Banner */}
             <div className="relative mb-20">
@@ -270,7 +292,12 @@ function ChefProfile({ profileData }) {
                   </>
                 ) : (
                   <button
-                    onClick={() => subscribeToggle()}
+                    onClick={() =>
+                      !subscribed &&
+                      document
+                        .getElementById("confirm-subscription")
+                        ?.showModal()
+                    }
                     disabled={loading}
                     className={`btn gap-2 ${
                       subscribed
@@ -279,16 +306,18 @@ function ChefProfile({ profileData }) {
                     }`}
                   >
                     <FaHeart
-                      className={subscribed ? "text-rose-500" : "text-white"}
+                      className={
+                        subscribed
+                          ? "text-rose-500 w-5 h-5"
+                          : "text-white w-5 h-5"
+                      }
                     />
-                    {subscribed
-                      ? "Unsubscribe"
-                      : `Subscribe • $${profileData?.chefProfile?.subscriptionPrice}`}
+
+                    {subscribed ? "Subscribed" : "Subscribe"}
                   </button>
                 )}
               </div>
             </div>
-
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
               {stats.map((stat, i) => (
@@ -306,65 +335,112 @@ function ChefProfile({ profileData }) {
               ))}
             </div>
 
-            {/* Professional Info Card */}
+            {/* Professional Background */}
             {(profileData?.chefProfile?.education?.length > 0 ||
               profileData?.chefProfile?.experience?.length > 0) && (
               <div className="card bg-white shadow-xl border border-orange-100 overflow-hidden mb-10">
-                {/* Decorative Gradient */}
                 <div className="h-1.5 bg-linear-to-r from-orange-400 via-red-400 to-amber-400"></div>
 
                 <div className="card-body p-6 sm:p-8">
-                  {/* Header */}
-                  <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3 mb-6">
+                  <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3 mb-8">
                     <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 shadow-sm">
                       <FaBriefcase className="w-5 h-5" />
                     </div>
                     Professional Background
                   </h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     {/* Education */}
                     {profileData?.chefProfile?.education?.length > 0 && (
-                      <div className="group">
-                        <h4 className="font-bold text-gray-400 uppercase tracking-widest text-xs flex items-center gap-2 mb-4">
-                          <FaGraduationCap className="text-orange-400 w-4 h-4" />
+                      <div>
+                        <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-orange-500 mb-5">
+                          <FaGraduationCap />
                           Education & Certifications
                         </h4>
 
-                        <div className="pl-4 border-l-4 border-orange-200 group-hover:border-orange-400 transition-colors space-y-3">
-                          {profileData.chefProfile.education.map(
-                            (edu, index) => (
-                              <p
-                                key={`edu-${index}`}
-                                className="text-gray-700 text-sm font-medium leading-relaxed"
-                              >
-                                {edu}
+                        <div className="space-y-5">
+                          {profileData.chefProfile.education.map((edu) => (
+                            <div
+                              key={edu._id}
+                              className="relative pl-5 border-l-2 border-orange-200"
+                            >
+                              <div className="absolute -left-[7px] top-1 w-3 h-3 bg-orange-400 rounded-full"></div>
+
+                              <h5 className="font-semibold text-gray-800">
+                                {edu.degree}
+                                {edu.fieldOfStudy && (
+                                  <span className="text-gray-600">
+                                    {" "}
+                                    in {edu.fieldOfStudy}
+                                  </span>
+                                )}
+                              </h5>
+
+                              <p className="text-sm text-gray-600">
+                                {edu.institution}
                               </p>
-                            ),
-                          )}
+
+                              <p className="text-xs text-gray-500">
+                                {edu.startYear} - {edu.endYear || "Present"}
+                              </p>
+
+                              {edu.description && (
+                                <p className="text-sm text-gray-700 mt-2 leading-relaxed">
+                                  {edu.description}
+                                </p>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
 
                     {/* Experience */}
                     {profileData?.chefProfile?.experience?.length > 0 && (
-                      <div className="group">
-                        <h4 className="font-bold text-gray-400 uppercase tracking-widest text-xs flex items-center gap-2 mb-4">
-                          <FaBriefcase className="text-amber-400 w-4 h-4" />
-                          Work Experience
+                      <div>
+                        <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-amber-500 mb-5">
+                          <FaBriefcase />
+                          Professional Experience
                         </h4>
 
-                        <div className="pl-4 border-l-4 border-amber-200 group-hover:border-amber-400 transition-colors space-y-3">
-                          {profileData.chefProfile.experience.map(
-                            (exp, index) => (
-                              <p
-                                key={`exp-${index}`}
-                                className="text-gray-700 text-sm font-medium leading-relaxed whitespace-pre-line"
-                              >
-                                {exp}
+                        <div className="space-y-5">
+                          {profileData.chefProfile.experience.map((exp) => (
+                            <div
+                              key={exp._id}
+                              className="relative pl-5 border-l-2 border-amber-200"
+                            >
+                              <div className="absolute -left-[7px] top-1 w-3 h-3 bg-amber-400 rounded-full"></div>
+
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h5 className="font-semibold text-gray-800">
+                                  {exp.title}
+                                </h5>
+
+                                {exp.employmentType && (
+                                  <span className="badge badge-sm bg-amber-50 border-amber-200 text-amber-700">
+                                    {exp.employmentType}
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className="text-sm text-gray-600">
+                                {exp.companyOrOrganization}
                               </p>
-                            ),
-                          )}
+
+                              <p className="text-xs text-gray-500">
+                                {exp.startYear} -{" "}
+                                {exp.isCurrenltyWorking
+                                  ? "Present"
+                                  : exp.endYear || "Present"}
+                              </p>
+
+                              {exp.description && (
+                                <p className="text-sm text-gray-700 mt-2 leading-relaxed">
+                                  {exp.description}
+                                </p>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
@@ -398,7 +474,6 @@ function ChefProfile({ profileData }) {
                 )}
               </div>
             </div>
-
             {/* Reviews */}
             <div className="card bg-base-100 shadow mt-8">
               <div className="card-body">
@@ -421,7 +496,6 @@ function ChefProfile({ profileData }) {
                 </div>
               </div>
             </div>
-
             {/* Only visible to the chef themselves */}
             {isOwnProfile && (
               <>

@@ -2,13 +2,10 @@ import toast from "react-hot-toast";
 
 import axiosInstance from "../../configs/axiosConfig";
 
-export default async function unsubscribeApi(id) {
-  const res = axiosInstance.get(`/user/unsubscribe/${id}`);
+export default async function createSubscriptionApi(data) {
+  const res = axiosInstance.post("/payment/create-subscription", data);
   toast.promise(res, {
-    loading: "Unsubscribing...",
-    success: (data) => {
-      return data?.data?.message;
-    },
+    loading: "Creating subscription...",
     error: (err) => {
       return err?.response?.data?.message;
     },
