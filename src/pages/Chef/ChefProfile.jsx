@@ -14,8 +14,7 @@ import {
   FaUtensils,
 } from "react-icons/fa";
 import { GiTakeMyMoney } from "react-icons/gi";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 
 import createSubscriptionApi from "../../apis/user/createSubscriptionApi";
 import ConfirmSubscriptionDialog from "../../components/chefProfile/ConfirmSubscriptionDialog";
@@ -25,12 +24,12 @@ import ChangePasswordDialog from "../../components/userProfile/ChangePasswordDia
 import ProfileStats from "../../components/userProfile/ProfileStats";
 import ProfileTabs from "../../components/userProfile/ProfileTabs";
 import HomeLayout from "../../layouts/HomeLayout";
+import { getProfile } from "../../redux/slices/authSlice";
 
 function ChefProfile({ profileData }) {
   const { userData } = useSelector((state) => state.auth);
   const isOwnProfile = userData?._id.toString() === profileData?._id.toString();
-  const navigate = useNavigate();
-
+  const dispatch = useDispatch();
   const [subscribed, setSubscribed] = useState(
     userData?.profile?.subscribed?.some(
       (id) => id.toString() === profileData._id.toString(),
@@ -59,8 +58,8 @@ function ChefProfile({ profileData }) {
           contact: "+91",
         },
         handler: async function () {
-          navigate(`profile/${profileData._id}`);
           setSubscribed(true);
+          await dispatch(getProfile());
         },
       };
 

@@ -56,14 +56,21 @@ export default function RecipeCarousels() {
     (async () => {
       setLoading(true);
 
-      if (trendingNow.length === 0) await dispatch(getTrending(12));
-      if (freshAndNew.length === 0) await dispatch(getFreshAndNew(12));
-      if (quickAndEasy.length === 0) await dispatch(getQuickAndEasy(12));
-      if (premiumPicks.length === 0) await dispatch(getPremium(12));
+      const requests = [];
 
-      // Recommended section loads only for logged-in users
-      if (isLoggedIn && recommendedForYou?.length === 0)
-        await dispatch(getRecommended(12));
+      if (trendingNow.length === 0) requests.push(dispatch(getTrending(12)));
+
+      if (freshAndNew.length === 0) requests.push(dispatch(getFreshAndNew(12)));
+
+      if (quickAndEasy.length === 0)
+        requests.push(dispatch(getQuickAndEasy(12)));
+
+      if (premiumPicks.length === 0) requests.push(dispatch(getPremium(12)));
+
+      if (isLoggedIn && recommendedForYou.length === 0)
+        requests.push(dispatch(getRecommended(12)));
+
+      await Promise.all(requests);
 
       setLoading(false);
     })();

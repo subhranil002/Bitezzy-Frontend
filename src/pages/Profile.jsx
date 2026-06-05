@@ -66,7 +66,7 @@ export default function Profile() {
         setLoading(false);
       }
     })();
-  }, [id, userData?.updatedAt]);
+  }, [id, userData?.updatedAt, userData?.profile?.subscribed?.length]);
 
   // Show loading spinner while fetching
   if (loading) return <Loading />;
