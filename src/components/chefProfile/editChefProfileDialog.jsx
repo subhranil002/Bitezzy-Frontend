@@ -322,8 +322,8 @@ export default function EditChefProfileDialog() {
 
     appendEducation({
       ...educationDraft,
-      startYear: Number(educationDraft.startYear),
-      endYear: Number(educationDraft.endYear),
+      startYear: String(educationDraft.startYear),
+      endYear: String(educationDraft.endYear),
     });
 
     setEducationDraft({
@@ -471,8 +471,8 @@ export default function EditChefProfileDialog() {
           institution: item.institution,
           degree: item.degree,
           fieldOfStudy: item.fieldOfStudy,
-          startYear: item.startYear,
-          endYear: item.endYear,
+          startYear: String(item.startYear),
+          endYear: String(item.endYear),
           description: item.description,
         })),
         experience: data.experience.map((item) => ({
@@ -480,8 +480,8 @@ export default function EditChefProfileDialog() {
           employmentType: item.employmentType,
           companyOrOrganization: item.companyOrOrganization,
           isCurrentlyWorking: !!item.isCurrentlyWorking,
-          startYear: item.startYear,
-          endYear: item.isCurrentlyWorking ? "" : item.endYear,
+          startYear: String(item.startYear),
+          endYear: String(item.endYear),
           description: item.description,
         })),
         externalLinks: data.externalLinks.map((i) => i.value),
@@ -792,6 +792,7 @@ export default function EditChefProfileDialog() {
                   className="select select-bordered w-full border-gray-200 focus:border-orange-400 rounded-xl uppercase"
                   {...register("speciality")}
                 >
+                  <option value="">Select Speciality</option>
                   {CUISINE_OPTIONS.map((c) => (
                     <option key={c} value={c}>
                       {c}
@@ -1010,6 +1011,7 @@ export default function EditChefProfileDialog() {
                       }));
                     }}
                   >
+                    <option value="">Select Employment Type</option>
                     {EMPLOYMENT_TYPE_OPTIONS.map((type) => (
                       <option key={type} value={type}>
                         {type}

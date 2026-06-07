@@ -21,21 +21,39 @@ import likeRecipeApi from "../../apis/recipe/likeRecipeApi";
 import unlikeRecipeApi from "../../apis/recipe/unlikeRecipeApi";
 import Loading from "../../components/Loading";
 import RecipeCarousel from "../../components/recipe/RecipeCarousel";
+import RecipeReviews from "../../components/RecipeReviews";
 import HomeLayout from "../../layouts/HomeLayout";
-import { getRecipeById, resetRecipe } from "../../redux/slices/recipeSlice";
+import {
+  getRecipeById,
+  resetRecipe,
+} from "../../redux/slices/recipeSlice";
+import {
+  addChefReview,
+  addRecipeReview,
+  deleteChefReview,
+  deleteRecipeReview,
+  fetchRecipeReviews,
+  resetReviewState,
+  updateChefReview,
+  updateRecipeReview,
+} from "../../redux/slices/reviewSlice";
 
 function RecipeDetail() {
   const { id } = useParams();
-  const { recipe, chef, error } = useSelector((state) => state.recipe);
+  const {
+    recipe,
+    chef,
+    error,
+  } = useSelector((state) => state.recipe);
+  const {
+    isSubmittingRecipeReview,
+    isSubmittingChefReview,
+  } = useSelector((state) => state.review);
   const { isLoggedIn, userData } = useSelector((state) => state.auth);
   const [isFav, setIsFav] = useState(
     userData?.favourites?.find((fav) => fav.toString() === id),
   );
   const [cost, setCost] = useState({ total: 0, perServing: 0 });
-  const [stats, setStats] = useState({
-    averageRating: 0,
-    reviewCount: 0,
-  });
   const [madeIt, setMadeIt] = useState(false);
   const [madeItCount, setMadeItCount] = useState(0);
   const [similarRecipes, setSimilarRecipes] = useState([]);
@@ -62,6 +80,36 @@ function RecipeDetail() {
   // Determine if the logged-in user is the author of the recipe
   const isChef = isLoggedIn && userData?._id === chef?._id;
 
+  // Find existing reviews
+  const existingRecipeReview = recipe?.reviews?.find(
+    (r) => (r.userId?._id || r.userId) === userData?._id,
+  );
+
+  const existingChefReview = chef?.chefProfile?.reviews?.find(
+    (r) => (r.userId?._id || r.userId) === userData?._id,
+  );
+
+  // Prefill review modals when existing reviews are loaded
+  useEffect(() => {
+    if (existingRecipeReview) {
+      setRating(existingRecipeReview.rating);
+      setReviewText(existingRecipeReview.message);
+    } else {
+      setRating(0);
+      setReviewText("");
+    }
+  }, [existingRecipeReview, showReview]);
+
+  useEffect(() => {
+    if (existingChefReview) {
+      setChefRating(existingChefReview.rating);
+      setChefReviewText(existingChefReview.message);
+    } else {
+      setChefRating(0);
+      setChefReviewText("");
+    }
+  }, [existingChefReview, showChefReview]);
+
   useEffect(() => {
     if (!id) {
       navigate("/");
@@ -71,8 +119,9 @@ function RecipeDetail() {
 
     return () => {
       dispatch(resetRecipe());
+      dispatch(resetReviewState());
     };
-  }, [id]);
+  }, [id, dispatch, navigate]);
 
   useEffect(() => {
     if (error) {
@@ -106,18 +155,7 @@ function RecipeDetail() {
 
       setCost({ total: totalCost, perServing: costPerServing });
     }
-
-    if (recipe?.reviews) {
-      const reviews = recipe?.reviews || [];
-      const count = reviews.length;
-      const avg =
-        count > 0
-          ? reviews.reduce((s, r) => s + (Number(r?.rating) || 0), 0) / count
-          : 0;
-
-      setStats({ averageRating: Number(avg.toFixed(1)), reviewCount: count });
-    }
-  }, [recipe]);
+  }, [recipe, similarRecipes.length]);
 
   const toggleFav = () => {
     if (!isLoggedIn) return navigate("/login");
@@ -151,16 +189,117 @@ function RecipeDetail() {
     };
   }, []);
 
-  const handleChefReviewSubmit = () => {
-    console.log("Submitting Chef Review:", {
-      chefId: chef?._id,
-      rating: chefRating,
-      text: chefReviewText,
+  const handleRateRecipeClick = () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    } else {
+      setShowReview(true);
+    }
+  };
+
+  const handleReviewChefClick = () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    } else {
+      setShowChefReview(true);
+    }
+  };
+
+  const handleRecipeReviewSubmit = () => {
+    if (!isLoggedIn) return navigate("/login");
+    if (rating === 0) {
+      toast.error("Please select a rating");
+      return;
+    }
+    if (!reviewText.trim()) {
+      toast.error("Please write a review message");
+      return;
+    }
+
+    if (existingRecipeReview) {
+      dispatch(
+        updateRecipeReview({
+          recipeId: recipe._id.toString(),
+          rating,
+          message: reviewText,
+        }),
+      ).then((res) => {
+        if (!res.error) {
+          setShowReview(false);
+          dispatch(fetchRecipeReviews({ recipeId: recipe._id.toString(), page: 1, limit: 10 }));
+        }
+      });
+    } else {
+      dispatch(
+        addRecipeReview({
+          recipeId: recipe._id.toString(),
+          rating,
+          message: reviewText,
+        }),
+      ).then((res) => {
+        if (!res.error) {
+          setShowReview(false);
+          dispatch(fetchRecipeReviews({ recipeId: recipe._id.toString(), page: 1, limit: 10 }));
+        }
+      });
+    }
+  };
+
+  const handleRecipeReviewDelete = () => {
+    if (!isLoggedIn) return navigate("/login");
+    dispatch(deleteRecipeReview(recipe._id.toString())).then((res) => {
+      if (!res.error) {
+        setShowReview(false);
+        dispatch(fetchRecipeReviews({ recipeId: recipe._id.toString(), page: 1, limit: 10 }));
+      }
     });
-    toast.success("Thanks for reviewing the Chef!");
-    setShowChefReview(false);
-    setChefRating(0);
-    setChefReviewText("");
+  };
+
+  const handleChefReviewSubmit = () => {
+    if (!isLoggedIn) return navigate("/login");
+    if (chefRating === 0) {
+      toast.error("Please select a rating");
+      return;
+    }
+    if (!chefReviewText.trim()) {
+      toast.error("Please write a review message");
+      return;
+    }
+
+    if (existingChefReview) {
+      dispatch(
+        updateChefReview({
+          chefId: chef._id.toString(),
+          rating: chefRating,
+          message: chefReviewText,
+        }),
+      ).then((res) => {
+        if (!res.error) {
+          setShowChefReview(false);
+        }
+      });
+    } else {
+      dispatch(
+        addChefReview({
+          chefId: chef._id.toString(),
+          rating: chefRating,
+          message: chefReviewText,
+        }),
+      ).then((res) => {
+        if (!res.error) {
+          setShowChefReview(false);
+        }
+      });
+    }
+  };
+
+  const handleChefReviewDelete = () => {
+    if (!isLoggedIn) return navigate("/login");
+    dispatch(deleteChefReview(chef._id.toString())).then((res) => {
+      if (!res.error) {
+        setShowChefReview(false);
+      }
+    });
   };
 
   const handleDeleteRecipe = () => {
@@ -189,12 +328,12 @@ function RecipeDetail() {
     },
     ...(recipe?.nutrition?.calorie
       ? [
-          {
-            icon: <FaFire />,
-            label: "Calories",
-            value: `${recipe.nutrition.calorie} kcal`,
-          },
-        ]
+        {
+          icon: <FaFire />,
+          label: "Calories",
+          value: `${recipe.nutrition.calorie} kcal`,
+        },
+      ]
       : []),
   ];
 
@@ -230,6 +369,22 @@ function RecipeDetail() {
       prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
     );
   };
+
+  const isRecipeSubmitDisabled =
+    isSubmittingRecipeReview ||
+    rating === 0 ||
+    !reviewText.trim() ||
+    (existingRecipeReview &&
+      rating === existingRecipeReview.rating &&
+      reviewText === existingRecipeReview.message);
+
+  const isChefSubmitDisabled =
+    isSubmittingChefReview ||
+    chefRating === 0 ||
+    !chefReviewText.trim() ||
+    (existingChefReview &&
+      chefRating === existingChefReview.rating &&
+      chefReviewText === existingChefReview.message);
 
   return (
     <HomeLayout>
@@ -267,11 +422,10 @@ function RecipeDetail() {
 
               <button
                 onClick={toggleFav}
-                className={`absolute top-4 right-4 btn btn-circle ${
-                  isFav
+                className={`absolute top-4 right-4 btn btn-circle ${isFav
                     ? "bg-rose-500 text-white border-none"
                     : "bg-white/80 text-gray-700 border-none hover:bg-white"
-                }`}
+                  }`}
               >
                 <FaHeart className="w-5 h-5" />
               </button>
@@ -316,25 +470,25 @@ function RecipeDetail() {
                         </div>
                         <div>
                           <Link
-                            to={`/profile/${chef?._id.toString() ?? ""}`}
+                            to={`/profile/${chef?._id?.toString() ?? ""}`}
                             className="card-title link link-hover text-orange-600"
                           >
                             {chef?.profile?.name || "Chef"}
                           </Link>
                           <div className="flex items-center gap-1 text-sm text-gray-500">
                             <FaStar className="text-yellow-400" />
-                            {stats.averageRating} • {stats.reviewCount} reviews
+                            {chef?.chefProfile?.averageRating || 0} • {chef?.chefProfile?.reviews?.length || 0} reviews
                           </div>
                         </div>
                       </div>
 
                       <div>
                         <button
-                          onClick={() => setShowChefReview(true)}
+                          onClick={handleReviewChefClick}
                           className="btn btn-sm btn-outline border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300 gap-2 rounded-xl"
                         >
                           <FaPen className="w-3 h-3" />
-                          Review Chef
+                          {existingChefReview ? "Edit Chef Review" : "Review Chef"}
                         </button>
                       </div>
                     </div>
@@ -513,9 +667,8 @@ function RecipeDetail() {
                               return (
                                 <tr
                                   key={index}
-                                  className={`transition-all duration-300 ${
-                                    isChecked ? "opacity-50" : ""
-                                  }`}
+                                  className={`transition-all duration-300 ${isChecked ? "opacity-50" : ""
+                                    }`}
                                 >
                                   <td>
                                     <input
@@ -529,31 +682,28 @@ function RecipeDetail() {
                                   </td>
 
                                   <td
-                                    className={`font-medium ${
-                                      isChecked
+                                    className={`font-medium ${isChecked
                                         ? "line-through text-gray-400"
                                         : "text-gray-800"
-                                    }`}
+                                      }`}
                                   >
                                     {ing.name}
                                   </td>
 
                                   <td
-                                    className={`font-medium ${
-                                      isChecked
+                                    className={`font-medium ${isChecked
                                         ? "line-through text-gray-400"
                                         : "text-gray-600"
-                                    }`}
+                                      }`}
                                   >
                                     {ing.quantity} {ing.unit}
                                   </td>
 
                                   <td
-                                    className={`text-right ${
-                                      isChecked
+                                    className={`text-right ${isChecked
                                         ? "line-through text-gray-300"
                                         : "text-gray-500"
-                                    }`}
+                                      }`}
                                   >
                                     ₹{(Number(ing.marketPrice) || 0).toFixed(2)}
                                   </td>
@@ -565,61 +715,60 @@ function RecipeDetail() {
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Instructions */}
-                  <div className="card bg-base-100 shadow-lg border border-orange-100 mt-8">
-                    <div className="card-body">
-                      <h3 className="card-title text-gray-800">Instructions</h3>
-                      <div className="space-y-8">
-                        {recipe.steps.map((step, i) => (
-                          <div key={i} className="print-step space-y-4">
-                            <div className="flex items-start gap-4">
-                              <div className="w-8 h-8 flex items-center justify-center bg-linear-to-r from-orange-400 to-red-400 text-white rounded-full font-semibold shadow-md shrink-0">
-                                {step.stepNo}
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-gray-700 leading-relaxed text-lg">
-                                  {step.instruction}
-                                </p>
-                              </div>
+                {/* Instructions */}
+                <div className="card bg-base-100 shadow-lg border border-orange-100 mt-8">
+                  <div className="card-body">
+                    <h3 className="card-title text-gray-800">Instructions</h3>
+                    <div className="space-y-8">
+                      {recipe.steps.map((step, i) => (
+                        <div key={i} className="print-step space-y-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-8 h-8 flex items-center justify-center bg-linear-to-r from-orange-400 to-red-400 text-white rounded-full font-semibold shadow-md shrink-0">
+                              {step.stepNo}
                             </div>
-
-                            {step.imageUrl?.secure_url && (
-                              <div className="w-full">
-                                <img
-                                  src={step.imageUrl.secure_url}
-                                  alt={`Step ${step.stepNo}`}
-                                  className="rounded-lg shadow-md w-full max-h-96 object-contain"
-                                />
-                              </div>
-                            )}
+                            <div className="flex-1">
+                              <p className="text-gray-700 leading-relaxed text-lg">
+                                {step.instruction}
+                              </p>
+                            </div>
                           </div>
-                        ))}
-                      </div>
+
+                          {step.imageUrl?.secure_url && (
+                            <div className="w-full">
+                              <img
+                                src={step.imageUrl.secure_url}
+                                alt={`Step ${step.stepNo}`}
+                                className="rounded-lg shadow-md w-full max-h-96 object-contain"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Sidebar */}
-              <div className="space-y-6">
+              <div className="flex flex-col h-full min-h-0 space-y-6">
+                
                 {/* I MADE IT WIDGET */}
                 <div
-                  className={`card shadow-lg transition-all duration-500 border-2 ${
-                    madeIt
+                  className={`card shadow-lg transition-all duration-500 border-2 shrink-0 ${madeIt
                       ? "bg-emerald-50 border-emerald-400 shadow-emerald-100"
                       : "bg-base-100 border-orange-100 hover:border-orange-200"
-                  }`}
+                    }`}
                 >
                   <div className="card-body p-6 text-center">
                     <div className="flex flex-col items-center mb-4">
                       <div className="flex items-baseline gap-1">
                         <span
-                          className={`text-4xl font-black transition-all duration-300 ${
-                            madeIt
+                          className={`text-4xl font-black transition-all duration-300 ${madeIt
                               ? "text-emerald-600 scale-110"
                               : "text-gray-800"
-                          }`}
+                            }`}
                         >
                           {madeItCount}
                         </span>
@@ -631,26 +780,23 @@ function RecipeDetail() {
 
                     <button
                       onClick={handleMadeItToggle}
-                      className={`btn w-full text-sm font-semibold rounded-xl shadow-md transition-all duration-300 group ${
-                        madeIt
+                      className={`btn w-full text-sm font-semibold rounded-xl shadow-md transition-all duration-300 group ${madeIt
                           ? "bg-emerald-500 hover:bg-emerald-600 border-none text-white ring-4 ring-emerald-100"
                           : "bg-linear-to-r from-orange-400 to-red-400 border-none text-white hover:shadow-orange-200 hover:-translate-y-1"
-                      }`}
+                        }`}
                     >
                       <FaCheckCircle
-                        className={`w-5 h-5 transition-transform duration-300 ${
-                          madeIt ? "scale-125" : "group-hover:scale-110"
-                        }`}
+                        className={`w-5 h-5 transition-transform duration-300 ${madeIt ? "scale-125" : "group-hover:scale-110"
+                          }`}
                       />
                       {madeIt ? "I Made It!" : "I Made This"}
                     </button>
 
                     <div
-                      className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                        madeIt
+                      className={`transition-all duration-500 ease-in-out overflow-hidden ${madeIt
                           ? "max-h-20 opacity-100 mt-3"
                           : "max-h-0 opacity-0"
-                      }`}
+                        }`}
                     >
                       <p className="text-sm font-semibold text-emerald-600 bg-white/50 py-2 px-3 rounded-lg inline-flex items-center gap-2">
                         <span>🎉</span> Delicious choice!
@@ -658,9 +804,9 @@ function RecipeDetail() {
                     </div>
                   </div>
                 </div>
-
+                
                 {/* --- Reviews & Rating Card --- */}
-                <div className="card bg-base-100 shadow-md border border-orange-100 overflow-hidden">
+                <div className="card bg-base-100 shadow-md border border-orange-100 overflow-hidden shrink-0">
                   <div className="h-2 bg-linear-to-r from-yellow-400 to-orange-500"></div>
 
                   <div className="card-body items-center text-center p-6">
@@ -669,7 +815,7 @@ function RecipeDetail() {
                     </h3>
                     <div className="flex items-end justify-center gap-1 leading-none mb-2">
                       <span className="text-5xl font-black text-gray-800">
-                        {stats.averageRating}
+                        {recipe?.averageRating || 0}
                       </span>
                       <span className="text-xl font-bold text-gray-300 mb-1">
                         / 5
@@ -679,32 +825,31 @@ function RecipeDetail() {
                       {Array.from({ length: 5 }).map((_, i) => (
                         <FaStar
                           key={i}
-                          className={`text-2xl transition-colors duration-200 ${
-                            i < Math.round(stats.averageRating)
+                          className={`text-2xl transition-colors duration-200 ${i < Math.round(recipe?.averageRating || 0)
                               ? "text-yellow-400 drop-shadow-sm"
                               : "text-gray-200"
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>
 
                     <p className="text-sm text-gray-400 font-medium mb-6">
-                      ({stats.reviewCount}
-                      {stats.reviewCount === 1 ? "review" : "reviews"})
+                      ({recipe?.reviews?.length || 0}{" "}
+                      {recipe?.reviews?.length === 1 ? "review" : "reviews"})
                     </p>
                     <button
-                      onClick={() => setShowReview(true)}
+                      onClick={handleRateRecipeClick}
                       className="btn w-full bg-linear-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white border-none shadow-md hover:shadow-orange-200 hover:-translate-y-0.5 transition-all rounded-xl"
                     >
                       <FaStar className="mr-1" />
-                      Rate This Recipe
+                      {existingRecipeReview ? "Edit Your Recipe Review" : "Rate This Recipe"}
                     </button>
                   </div>
                 </div>
 
                 {/* External Media */}
                 {recipe.externalMediaLinks?.length > 0 && (
-                  <div className="card bg-base-100 shadow-lg border border-orange-100">
+                  <div className="card bg-base-100 shadow-lg border border-orange-100 shrink-0">
                     <div className="card-body">
                       <h3 className="card-title text-gray-800">
                         Related Media
@@ -730,6 +875,12 @@ function RecipeDetail() {
                     </div>
                   </div>
                 )}
+                
+                {/* Recipe Reviews Section */}
+                <div className="flex-1 min-h-0 flex flex-col items-stretch pb-0 lg:pb-2">
+                  <RecipeReviews recipeId={recipe._id.toString()} />
+                </div>
+                
               </div>
             </div>
 
@@ -766,7 +917,7 @@ function RecipeDetail() {
           <div className="relative w-full max-w-md rounded-3xl overflow-hidden border border-white/50 bg-white/70 backdrop-blur-2xl shadow-2xl animate-fadeIn">
             <div className="text-center py-6 px-6 border-b border-white/40 bg-linear-to-r from-orange-500/10 via-amber-300/10 to-red-500/10">
               <h3 className="text-2xl font-extrabold bg-linear-to-r from-orange-500 via-red-500 to-amber-500 bg-clip-text text-transparent">
-                Rate this Recipe
+                {existingRecipeReview ? "Update your Recipe Review" : "Rate this Recipe"}
               </h3>
               <p className="text-sm text-gray-600 mt-1">
                 Share your experience with others
@@ -777,35 +928,48 @@ function RecipeDetail() {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <FaStar
                     key={i}
-                    onClick={() => setRating(i + 1)}
-                    className={`text-3xl cursor-pointer transition-all duration-200 ${
-                      i < rating
+                    onClick={() => {
+                      if (!isSubmittingRecipeReview) {
+                        setRating(i + 1);
+                      }
+                    }}
+                    className={`text-3xl cursor-pointer transition-all duration-200 ${i < rating
                         ? "text-yellow-400 drop-shadow-sm scale-110"
                         : "text-gray-100 opacity-90 hover:text-yellow-400 hover:scale-105"
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
               <textarea
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
-                className="textarea textarea-bordered w-full h-28 resize-none bg-white/60 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                disabled={isSubmittingRecipeReview}
+                className="textarea textarea-bordered w-full h-28 resize-none bg-white/60 focus:outline-none focus:ring-2 focus:ring-orange-200 disabled:opacity-50"
                 placeholder="Write your recipe review..."
               />
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setShowReview(false)}
-                  className="btn flex-1 rounded-xl bg-white/70 hover:bg-white border border-gray-200 text-gray-700 transition-all"
+                  disabled={isSubmittingRecipeReview}
+                  className="btn flex-1 rounded-xl bg-white/70 hover:bg-white border border-gray-200 text-gray-700 transition-all disabled:opacity-50"
                 >
                   Cancel
                 </button>
+                {existingRecipeReview && (
+                  <button
+                    onClick={handleRecipeReviewDelete}
+                    disabled={isSubmittingRecipeReview}
+                    className="btn flex-1 rounded-xl bg-red-100 hover:bg-red-200 text-red-600 font-semibold border-none shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                  >
+                    Delete Review
+                  </button>
+                )}
                 <button
-                  onClick={() => {
-                    setShowReview(false);
-                  }}
-                  className="btn flex-1 rounded-xl bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold border-none shadow-md hover:shadow-lg transition-all"
+                  onClick={handleRecipeReviewSubmit}
+                  disabled={isRecipeSubmitDisabled}
+                  className="btn flex-1 rounded-xl bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold border-none shadow-md hover:shadow-lg transition-all disabled:bg-gray-200 disabled:text-gray-400"
                 >
-                  Submit
+                  {isSubmittingRecipeReview ? "Submitting..." : existingRecipeReview ? "Update Review" : "Submit"}
                 </button>
               </div>
             </div>
@@ -819,11 +983,12 @@ function RecipeDetail() {
           <div className="relative w-full max-w-md rounded-3xl overflow-hidden border border-orange-100 bg-white shadow-2xl animate-fadeIn">
             <div className="flex justify-between items-center py-4 px-6 border-b border-orange-50 bg-linear-to-r from-orange-50 to-amber-50">
               <h3 className="text-xl font-bold text-gray-800">
-                Review Chef {chef?.profile?.name}
+                {existingChefReview ? "Update Review for Chef" : `Review Chef ${chef?.profile?.name}`}
               </h3>
               <button
                 onClick={() => setShowChefReview(false)}
-                className="btn btn-sm btn-circle btn-ghost text-gray-500 hover:bg-orange-100"
+                disabled={isSubmittingChefReview}
+                className="btn btn-sm btn-circle btn-ghost text-gray-500 hover:bg-orange-100 disabled:opacity-50"
               >
                 <FaTimes />
               </button>
@@ -854,12 +1019,15 @@ function RecipeDetail() {
                   {Array.from({ length: 5 }).map((_, i) => (
                     <FaStar
                       key={i}
-                      onClick={() => setChefRating(i + 1)}
-                      className={`text-4xl cursor-pointer transition-transform duration-200 hover:scale-110 ${
-                        i < chefRating
+                      onClick={() => {
+                        if (!isSubmittingChefReview) {
+                          setChefRating(i + 1);
+                        }
+                      }}
+                      className={`text-4xl cursor-pointer transition-transform duration-200 hover:scale-110 ${i < chefRating
                           ? "opacity-100 drop-shadow-sm"
                           : "opacity-30 hover:opacity-60"
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>
@@ -869,7 +1037,8 @@ function RecipeDetail() {
                 <textarea
                   value={chefReviewText}
                   onChange={(e) => setChefReviewText(e.target.value)}
-                  className="textarea textarea-bordered w-full h-32 rounded-xl focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50"
+                  disabled={isSubmittingChefReview}
+                  className="textarea textarea-bordered w-full h-32 rounded-xl focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 disabled:opacity-50"
                   placeholder="Share your thoughts on the chef's style, consistency, etc..."
                 />
               </div>
@@ -877,16 +1046,26 @@ function RecipeDetail() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowChefReview(false)}
-                  className="btn flex-1 btn-ghost rounded-xl"
+                  disabled={isSubmittingChefReview}
+                  className="btn flex-1 btn-ghost rounded-xl disabled:opacity-50"
                 >
                   Cancel
                 </button>
+                {existingChefReview && (
+                  <button
+                    onClick={handleChefReviewDelete}
+                    disabled={isSubmittingChefReview}
+                    className="btn flex-1 rounded-xl bg-red-100 hover:bg-red-200 text-red-600 font-semibold border-none shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                  >
+                    Delete Review
+                  </button>
+                )}
                 <button
                   onClick={handleChefReviewSubmit}
-                  disabled={chefRating === 0}
+                  disabled={isChefSubmitDisabled}
                   className="btn flex-1 bg-linear-to-r from-orange-500 to-red-500 border-none text-white rounded-xl disabled:bg-gray-200 disabled:text-gray-400"
                 >
-                  Submit Review
+                  {isSubmittingChefReview ? "Submitting..." : existingChefReview ? "Update Review" : "Submit Review"}
                 </button>
               </div>
             </div>
