@@ -30,21 +30,6 @@ export default function RecipeCard({ recipe }) {
   const { isLoggedIn, userData } = useSelector((state) => state.auth);
 
   const recipeId = s(recipe?._id);
-  const chefId = s(recipe?.chefId);
-
-  // Determine if recipe is accessible to current user
-  const unlocked = () => {
-    if (!recipe || !userData) return true;
-
-    if (userData.role === "CHEF") {
-      return s(recipe.chefId) === s(userData._id) || !recipe.isPremium;
-    }
-
-    if (!recipe.isPremium) return true;
-
-    const subs = userData?.profile?.subscribed ?? [];
-    return subs.some((id) => s(id) === chefId);
-  };
 
   // Check if recipe is already in favourites
   const initialFav = (userData?.favourites ?? []).some(
@@ -96,18 +81,6 @@ export default function RecipeCard({ recipe }) {
       }
     };
   }, []);
-
-  // Handle view/unlock button click
-  const handleRecipeViewButton = () => {
-    if (!recipeId) return;
-
-    if (unlocked()) {
-      navigate(`/recipe/${recipeId}`);
-    } else {
-      toast.error("Please subscribe to this chef to unlock recipe");
-      navigate(`/profile/${chefId}`);
-    }
-  };
 
   return (
     <article
@@ -209,26 +182,12 @@ export default function RecipeCard({ recipe }) {
           <div className="mt-auto pt-4">
             <button
               type="button"
-              onClick={handleRecipeViewButton}
-              className={[
-                "w-full btn rounded-2xl font-bold transition-transform duration-200 md:hover:-translate-y-0.5 md:hover:shadow-xl border-0",
-                unlocked()
-                  ? "bg-linear-to-r from-orange-400 to-red-400 md:hover:from-orange-500 md:hover:to-red-500 text-white shadow-orange-200/40"
-                  : "bg-linear-to-r from-yellow-400 to-amber-500 md:hover:from-yellow-500 md:hover:to-amber-600 text-gray-900 shadow-amber-200/40",
-              ].join(" ")}
+              onClick={() => navigate(`/recipe/${recipeId}`)}
+              className="w-full btn rounded-2xl font-bold transition-transform duration-200 md:hover:-translate-y-0.5 md:hover:shadow-xl border-0 bg-linear-to-r from-orange-400 to-red-400 md:hover:from-orange-500 md:hover:to-red-500 text-white shadow-orange-200/40"
             >
               <span className="flex items-center gap-2">
-                {unlocked() ? (
-                  <>
-                    <FaBolt className="w-3 h-3" />
-                    View Recipe
-                  </>
-                ) : (
-                  <>
-                    <FaLock className="w-3 h-3" />
-                    Unlock Recipe
-                  </>
-                )}
+                <FaBolt className="w-3 h-3" />
+                View Recipe
               </span>
             </button>
           </div>

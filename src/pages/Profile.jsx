@@ -1,11 +1,10 @@
-// Finalized
-
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 
-import getMyRecipesApi from "../apis/user/getMyRecipesApi";
+import getChefRecipesApi from "../apis/user/getChefRecipesApi";
 import getSubscribedApi from "../apis/user/getSubscribedApi";
+import getSubscribersApi from "../apis/user/getSubscribersApi";
 import getUserByIdApi from "../apis/user/getUserByIdApi";
 import Loading from "../components/Loading";
 import ChefProfile from "./Chef/ChefProfile";
@@ -31,14 +30,19 @@ export default function Profile() {
           const updatedUser = {
             ...userData,
             profile: { ...userData.profile },
+            chefProfile: { ...userData.chefProfile },
           };
 
-          const subscribedRes = await getSubscribedApi(userData._id.toString());
+          const subscribedRes = await getSubscribedApi();
           updatedUser.profile.subscribed = subscribedRes.data;
 
           if (updatedUser.role === "CHEF") {
-            const recipeRes = await getMyRecipesApi(userData._id.toString());
+            const [recipeRes, subscribersRes] = await Promise.all([
+              getChefRecipesApi(userData._id.toString()),
+              getSubscribersApi(),
+            ]);
             updatedUser.recipes = recipeRes.data;
+            updatedUser.chefProfile.subscribers = subscribersRes.data;
           }
 
           setCurrUser(updatedUser);
@@ -52,7 +56,7 @@ export default function Profile() {
           };
 
           if (fetchedUser.role === "CHEF") {
-            const recipesRes = await getMyRecipesApi(
+            const recipesRes = await getChefRecipesApi(
               fetchedUser._id.toString(),
             );
             fetchedUser.recipes = recipesRes.data;
