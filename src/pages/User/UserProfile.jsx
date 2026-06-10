@@ -133,11 +133,13 @@ function UserProfile({ profileData }) {
             </div>
 
             {/* 📑 Profile Tabs */}
-            <div className="card glass border border-orange-100 shadow-md hover:shadow-orange-300/60">
-              <div className="card-body">
-                <ProfileTabs profileData={profileData} />
+            {isOwnProfile && (
+              <div className="card glass border border-orange-100 shadow-md hover:shadow-orange-300/60">
+                <div className="card-body">
+                  <ProfileTabs profileData={profileData} />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </HomeLayout>

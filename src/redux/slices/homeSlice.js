@@ -1,13 +1,15 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-import getFreshAndNewRecipes from "../../apis/recipe/getFreshAndNewRecipesApi";
-import getPremiumRecipesApi from "../../apis/recipe/getPremiumRecipesApi";
-import getQuickAndEasyRecipesApi from "../../apis/recipe/getQuickAndEasyRecipesApi";
-import getRecommendedRecipesApi from "../../apis/recipe/getRecommendedRecipesApi";
-import getTrendingRecipesApi from "../../apis/recipe/getTrendingRecipesApi";
+import getFreshAndNewRecipes from "../../apis/home/getFreshAndNewRecipesApi";
+import getPremiumRecipesApi from "../../apis/home/getPremiumRecipesApi";
+import getQuickAndEasyRecipesApi from "../../apis/home/getQuickAndEasyRecipesApi";
+import getRecommendedRecipesApi from "../../apis/home/getRecommendedRecipesApi";
+import getTrendingPremiumRecipesApi from "../../apis/home/getTrendingPremiumRecipesApi";
+import getTrendingRecipesApi from "../../apis/home/getTrendingRecipesApi";
 import { logout } from "./authSlice";
 
 const initialState = {
+  trendingPremium: [],
   trendingNow: [],
   freshAndNew: [],
   recommendedForYou: [],
@@ -15,13 +17,27 @@ const initialState = {
   premiumPicks: [],
 };
 
-export const getTrending = createAsyncThunk("recipe/getTrending", async (limit) => {
-  try {
-    return await getTrendingRecipesApi(limit);
-  } catch (error) {
-    console.error(error);
-  }
-});
+export const getTrendingPremium = createAsyncThunk(
+  "recipe/getTrendingPremium",
+  async (limit) => {
+    try {
+      return await getTrendingPremiumRecipesApi(limit);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+);
+
+export const getTrending = createAsyncThunk(
+  "recipe/getTrending",
+  async (limit) => {
+    try {
+      return await getTrendingRecipesApi(limit);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+);
 
 export const getFreshAndNew = createAsyncThunk(
   "recipe/getFreshAndNew",
@@ -31,7 +47,7 @@ export const getFreshAndNew = createAsyncThunk(
     } catch (error) {
       console.error(error);
     }
-  }
+  },
 );
 
 export const getRecommended = createAsyncThunk(
@@ -42,7 +58,7 @@ export const getRecommended = createAsyncThunk(
     } catch (error) {
       console.error(error);
     }
-  }
+  },
 );
 
 export const getQuickAndEasy = createAsyncThunk(
@@ -53,16 +69,19 @@ export const getQuickAndEasy = createAsyncThunk(
     } catch (error) {
       console.error(error);
     }
-  }
+  },
 );
 
-export const getPremium = createAsyncThunk("recipe/getPremium", async (limit) => {
-  try {
-    return await getPremiumRecipesApi(limit);
-  } catch (error) {
-    console.error(error);
-  }
-});
+export const getPremium = createAsyncThunk(
+  "recipe/getPremium",
+  async (limit) => {
+    try {
+      return await getPremiumRecipesApi(limit);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+);
 
 const homeSlice = createSlice({
   name: "home",
@@ -70,6 +89,9 @@ const homeSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(getTrendingPremium.fulfilled, (state, action) => {
+        state.trendingPremium = action.payload.data;
+      })
       .addCase(getTrending.fulfilled, (state, action) => {
         state.trendingNow = action.payload.data;
       })
@@ -91,5 +113,4 @@ const homeSlice = createSlice({
   },
 });
 
-export const { resetRecipe } = homeSlice.actions;
 export default homeSlice;

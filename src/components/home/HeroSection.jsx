@@ -1,28 +1,42 @@
+import { useEffect } from "react";
 import { FaArrowRight } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
+import { getTrendingPremium } from "../../redux/slices/homeSlice";
 import FeaturedRecipeCard1 from "./FeaturedRecipeCard1";
 import FeaturedRecipeCard2 from "./FeaturedRecipeCard2";
 import FeaturedRecipeCard3 from "./FeaturedRecipeCard3";
 import FeaturedRecipeCard4 from "./FeaturedRecipeCard4";
 
 export default function HeroSection() {
+  const dispatch = useDispatch();
+  const { trendingPremium } = useSelector((state) => ({
+    trendingPremium: state.home.trendingPremium,
+  }));
+
+  useEffect(() => {
+    (async () => {
+      dispatch(getTrendingPremium(4));
+    })();
+  }, []);
+
   return (
     <section className="relative min-h-[100svh] md:min-h-[90vh] flex items-center justify-center overflow-hidden bg-linear-to-br from-orange-50 to-amber-50 py-20 md:py-0">
       {/* --- STUDIO LIGHTING & TEXTURE --- */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_0%,transparent_70%)] pointer-events-none" />
 
       {/* Card 1: Top Left */}
-      <FeaturedRecipeCard1 />
+      <FeaturedRecipeCard1 recipe={trendingPremium[0]} />
 
       {/* Card 2: Top Right */}
-      <FeaturedRecipeCard2 />
+      <FeaturedRecipeCard2 recipe={trendingPremium[1]} />
 
       {/* Card 3: Bottom Left */}
-      <FeaturedRecipeCard3 />
+      <FeaturedRecipeCard3 recipe={trendingPremium[2]} />
 
       {/* Card 4: Bottom Right */}
-      <FeaturedRecipeCard4 />
+      <FeaturedRecipeCard4 recipe={trendingPremium[3]} />
 
       {/* --- CTA --- */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 text-center max-w-4xl pointer-events-none">
