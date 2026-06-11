@@ -493,17 +493,19 @@ function RecipeDetail() {
                         </div>
                       </div>
 
-                      <div>
-                        <button
-                          onClick={handleReviewChefClick}
-                          className="btn btn-sm btn-outline border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300 gap-2 rounded-xl"
-                        >
-                          <FaPen className="w-3 h-3" />
-                          {existingChefReview
-                            ? "Edit Chef Review"
-                            : "Review Chef"}
-                        </button>
-                      </div>
+                      {!isChef && (
+                        <div>
+                          <button
+                            onClick={handleReviewChefClick}
+                            className="btn btn-sm btn-outline border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300 gap-2 rounded-xl"
+                          >
+                            <FaPen className="w-3 h-3" />
+                            {existingChefReview
+                              ? "Edit Chef Review"
+                              : "Review Chef"}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -41,7 +41,7 @@ export default function Profile() {
               getChefRecipesApi(userData._id.toString()),
               getSubscribersApi(),
             ]);
-            updatedUser.recipes = recipeRes.data;
+            updatedUser.chefProfile.recipes = recipeRes.data;
             updatedUser.chefProfile.subscribers = subscribersRes.data;
           }
 
@@ -53,13 +53,14 @@ export default function Profile() {
           const fetchedUser = {
             ...res.data,
             profile: { ...res.data.profile },
+            chefProfile: { ...res.data.chefProfile },
           };
 
           if (fetchedUser.role === "CHEF") {
             const recipesRes = await getChefRecipesApi(
               fetchedUser._id.toString(),
             );
-            fetchedUser.recipes = recipesRes.data;
+            fetchedUser.chefProfile.recipes = recipesRes.data;
           }
 
           setCurrUser(fetchedUser);

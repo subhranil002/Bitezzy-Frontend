@@ -38,16 +38,15 @@ function Chip({ color, children, onRemove }) {
 
   return (
     <span className={`badge ${colorMap[color]} gap-2 p-3 h-auto`}>
-      {/* Chip label */}
       <span className="truncate max-w-[15ch] sm:max-w-[25ch] text-sm font-medium">
         {children}
       </span>
 
-      {/* Remove chip button */}
       <button
         type="button"
         className="ml-1 btn btn-circle btn-ghost btn-xs text-current opacity-60 hover:opacity-100"
         onClick={onRemove}
+        aria-label="Remove chip"
       >
         <FaTrash className="w-3 h-3" />
       </button>
@@ -66,9 +65,52 @@ const EMPLOYMENT_TYPE_OPTIONS = [
   "other",
 ];
 
+const emptyEducation = () => ({
+  institution: "",
+  degree: "",
+  fieldOfStudy: "",
+  startYear: "",
+  endYear: "",
+  description: "",
+});
+
+const emptyExperience = () => ({
+  title: "",
+  employmentType: "",
+  companyOrOrganization: "",
+  isCurrentlyWorking: false,
+  startYear: "",
+  endYear: "",
+  description: "",
+});
+
+const normalizeText = (value) => (value ?? "").toString().trim();
+
+const isBlankEducationRow = (item) =>
+  !(
+    normalizeText(item?.institution) ||
+    normalizeText(item?.degree) ||
+    normalizeText(item?.fieldOfStudy) ||
+    normalizeText(item?.startYear) ||
+    normalizeText(item?.endYear) ||
+    normalizeText(item?.description)
+  );
+
+const isBlankExperienceRow = (item) =>
+  !(
+    normalizeText(item?.title) ||
+    normalizeText(item?.employmentType) ||
+    normalizeText(item?.companyOrOrganization) ||
+    normalizeText(item?.startYear) ||
+    normalizeText(item?.endYear) ||
+    normalizeText(item?.description) ||
+    item?.isCurrentlyWorking
+  );
+
 /**
  * Dialog component for editing a chef's profile.
- * Keeps the same structure and styling rhythm as the user profile dialog.
+ * Education and work experience are editable rows.
+ * Add buttons only create new blank rows.
  */
 export default function EditChefProfileDialog() {
   const dlgRef = useRef(null);
@@ -79,32 +121,11 @@ export default function EditChefProfileDialog() {
   const profile = userData?.profile;
   const chefProfile = userData?.chefProfile;
 
-  // Local state for avatar preview and draft inputs
   const [previewUrl, setPreviewUrl] = useState(null);
   const [dietaryDraft, setDietaryDraft] = useState("");
   const [allergenDraft, setAllergenDraft] = useState("");
-  const [educationDraft, setEducationDraft] = useState({
-    institution: "",
-    degree: "",
-    fieldOfStudy: "",
-    startYear: "",
-    endYear: "",
-    description: "",
-  });
-  const [workDraft, setWorkDraft] = useState({
-    title: "",
-    employmentType: "",
-    companyOrOrganization: "",
-    isCurrentlyWorking: false,
-    startYear: "",
-    endYear: "",
-    description: "",
-  });
   const [linkDraft, setLinkDraft] = useState("");
 
-  /**
-   * react-hook-form setup
-   */
   const {
     register,
     handleSubmit,
@@ -114,6 +135,7 @@ export default function EditChefProfileDialog() {
     clearErrors,
     reset,
     formState: { errors, isDirty },
+    getValues,
   } = useForm({
     mode: "onChange",
     defaultValues: {
@@ -123,10 +145,8 @@ export default function EditChefProfileDialog() {
       cuisine: profile?.cuisine || "",
       dietaryLabels: profile?.dietaryLabels?.map((v) => ({ value: v })) ?? [],
       allergens: profile?.allergens?.map((v) => ({ value: v })) ?? [],
-
       speciality: chefProfile?.speciality || "",
       subscriptionPrice: chefProfile?.subscriptionPrice ?? "",
-
       education:
         chefProfile?.education?.map((item) => ({
           institution: item?.institution ?? "",
@@ -136,7 +156,6 @@ export default function EditChefProfileDialog() {
           endYear: item?.endYear ?? "",
           description: item?.description ?? "",
         })) || [],
-
       experience:
         chefProfile?.experience?.map((item) => ({
           title: item?.title ?? "",
@@ -147,15 +166,11 @@ export default function EditChefProfileDialog() {
           endYear: item?.endYear ?? "",
           description: item?.description ?? "",
         })) || [],
-
       externalLinks:
         chefProfile?.externalLinks?.map((v) => ({ value: v })) ?? [],
     },
   });
 
-  /**
-   * useFieldArray manages dynamic lists
-   */
   const {
     fields: dietaryFields,
     append: appendDietary,
@@ -201,12 +216,8 @@ export default function EditChefProfileDialog() {
     name: "externalLinks",
   });
 
-  // Watch avatar input to generate preview
   const watchedFileList = watch("avatar");
 
-  /**
-   * Generates a preview URL for uploaded avatar images.
-   */
   useEffect(() => {
     const file = watchedFileList?.[0];
 
@@ -221,22 +232,15 @@ export default function EditChefProfileDialog() {
     return () => URL.revokeObjectURL(url);
   }, [watchedFileList]);
 
-  /**
-   * Computes avatar display URL.
-   */
   const avatarUrl = useMemo(() => {
     if (previewUrl) return previewUrl;
 
     const url = profile?.avatar?.secure_url;
-
     if (!url) return null;
 
     return url.replace("/upload/", "/upload/ar_1:1,c_auto,g_auto,w_500/r_max/");
   }, [previewUrl, profile]);
 
-  /**
-   * Ensures only unique items are added to a field array.
-   */
   const ensureUniqueAppend = (
     name,
     valueToAdd,
@@ -245,7 +249,7 @@ export default function EditChefProfileDialog() {
   ) => {
     if (!valueToAdd) return;
 
-    const currentItems = watch(name) || [];
+    const currentItems = getValues(name) || [];
 
     const exists = currentItems.some(
       (item) =>
@@ -258,9 +262,6 @@ export default function EditChefProfileDialog() {
     }
   };
 
-  /**
-   * Adds a new chip to the form field array
-   */
   const handleAddChip = (fieldName, draft, appendFn, clearFn) => {
     if (!draft) return;
 
@@ -268,170 +269,14 @@ export default function EditChefProfileDialog() {
     clearFn("");
   };
 
-  /**
-   * Handles adding education entries.
-   */
-  const handleAddEducation = () => {
-    const { institution, degree } = educationDraft;
-
-    if (!institution || !degree) {
-      setError("education", {
-        type: "manual",
-        message: "Institution and Degree are required",
-      });
-      return;
-    }
-
-    if (!educationDraft.startYear || !educationDraft.endYear) {
-      setError("education", {
-        type: "manual",
-        message: "Start and End Year are required",
-      });
-      return;
-    }
-
-    if (
-      educationDraft.startYear &&
-      educationDraft.endYear &&
-      educationDraft.startYear > educationDraft.endYear
-    ) {
-      setError("education", {
-        type: "manual",
-        message: "Start year cannot be greater than end year",
-      });
-      return;
-    }
-
-    const current = watch("education") || [];
-
-    const exists = current.some(
-      (item) =>
-        (item.institution || "").toLowerCase() === institution.toLowerCase() &&
-        (item.degree || "").toLowerCase() === degree.toLowerCase(),
-    );
-
-    if (exists) {
-      setError("education", {
-        type: "manual",
-        message: "This education already exists",
-      });
-      return;
-    }
-
-    clearErrors("education");
-
-    appendEducation({
-      ...educationDraft,
-      startYear: String(educationDraft.startYear),
-      endYear: String(educationDraft.endYear),
-    });
-
-    setEducationDraft({
-      institution: "",
-      degree: "",
-      fieldOfStudy: "",
-      startYear: "",
-      endYear: "",
-      description: "",
-    });
+  const handleAddEducationRow = () => {
+    appendEducation(emptyEducation());
   };
 
-  /**
-   * Handles adding work experience entries.
-   */
-  const handleAddExperience = () => {
-    const {
-      title,
-      employmentType,
-      companyOrOrganization,
-      isCurrentlyWorking,
-      startYear,
-      endYear,
-      description,
-    } = workDraft;
-
-    const normalizedTitle = title.trim();
-    const normalizedEmploymentType = employmentType.trim();
-    const normalizedCompany = companyOrOrganization.trim();
-
-    if (!normalizedTitle || !normalizedEmploymentType || !normalizedCompany) {
-      setError("experience", {
-        type: "manual",
-        message:
-          "Title, employment type, and company/organization are required",
-      });
-      return;
-    }
-
-    if (!startYear) {
-      setError("experience", {
-        type: "manual",
-        message: "Start year is required",
-      });
-      return;
-    }
-
-    if (!isCurrentlyWorking && !endYear) {
-      setError("experience", {
-        type: "manual",
-        message: "End year is required when not currently working",
-      });
-      return;
-    }
-
-    if (startYear && endYear && Number(startYear) > Number(endYear)) {
-      setError("experience", {
-        type: "manual",
-        message: "Start year cannot be greater than end year",
-      });
-      return;
-    }
-
-    const current = watch("experience") || [];
-
-    const exists = current.some(
-      (item) =>
-        (item.title || "").toLowerCase() === normalizedTitle.toLowerCase() &&
-        (item.companyOrOrganization || "").toLowerCase() ===
-          normalizedCompany.toLowerCase() &&
-        (item.employmentType || "").toLowerCase() ===
-          normalizedEmploymentType.toLowerCase(),
-    );
-
-    if (exists) {
-      setError("experience", {
-        type: "manual",
-        message: "This work experience already exists",
-      });
-      return;
-    }
-
-    clearErrors("experience");
-
-    appendExperience({
-      title: normalizedTitle,
-      employmentType: normalizedEmploymentType,
-      companyOrOrganization: normalizedCompany,
-      isCurrentlyWorking: !!isCurrentlyWorking,
-      startYear: Number(startYear),
-      endYear: isCurrentlyWorking ? null : Number(endYear),
-      description,
-    });
-
-    setWorkDraft({
-      title: "",
-      employmentType: "",
-      companyOrOrganization: "",
-      isCurrentlyWorking: false,
-      startYear: "",
-      endYear: "",
-      description: "",
-    });
+  const handleAddExperienceRow = () => {
+    appendExperience(emptyExperience());
   };
 
-  /**
-   * Handles adding a link to the form.
-   */
   const handleAddLink = () => {
     if (!linkDraft.trim()) return;
 
@@ -453,50 +298,71 @@ export default function EditChefProfileDialog() {
     setLinkDraft("");
   };
 
-  /**
-   * Handles form submission.
-   */
   const onSubmit = async (data) => {
     try {
-      const payload = {
-        avatar: data.avatar || null,
-        name: data.name,
-        bio: data.bio,
-        cuisine: data.cuisine,
-        dietaryLabels: data.dietaryLabels.map((i) => i.value.toLowerCase()),
-        allergens: data.allergens.map((i) => i.value.toLowerCase()),
-        speciality: data.speciality,
-        subscriptionPrice: Number(data.subscriptionPrice) || 0,
-        education: data.education.map((item) => ({
-          institution: item.institution,
-          degree: item.degree,
-          fieldOfStudy: item.fieldOfStudy,
-          startYear: String(item.startYear),
-          endYear: String(item.endYear),
-          description: item.description,
-        })),
-        experience: data.experience.map((item) => ({
-          title: item.title,
-          employmentType: item.employmentType,
-          companyOrOrganization: item.companyOrOrganization,
+      const cleanedEducation = (data.education || [])
+        .filter((item) => !isBlankEducationRow(item))
+        .map((item) => ({
+          institution: normalizeText(item.institution),
+          degree: normalizeText(item.degree),
+          fieldOfStudy: normalizeText(item.fieldOfStudy),
+          startYear: normalizeText(item.startYear),
+          endYear: normalizeText(item.endYear),
+          description: normalizeText(item.description),
+        }));
+
+      const cleanedExperience = (data.experience || [])
+        .filter((item) => !isBlankExperienceRow(item))
+        .map((item) => ({
+          title: normalizeText(item.title),
+          employmentType: normalizeText(item.employmentType),
+          companyOrOrganization: normalizeText(item.companyOrOrganization),
           isCurrentlyWorking: !!item.isCurrentlyWorking,
-          startYear: String(item.startYear),
-          endYear: String(item.endYear),
-          description: item.description,
-        })),
-        externalLinks: data.externalLinks.map((i) => i.value),
+          startYear: normalizeText(item.startYear),
+          endYear: item.isCurrentlyWorking
+            ? "Present"
+            : normalizeText(item.endYear),
+          description: normalizeText(item.description),
+        }));
+
+      const payload = {
+        avatar: data.avatar?.[0] || null,
+        name: normalizeText(data.name),
+        bio: normalizeText(data.bio),
+        cuisine: normalizeText(data.cuisine),
+        dietaryLabels: (data.dietaryLabels || []).map((i) =>
+          normalizeText(i.value).toLowerCase(),
+        ),
+        allergens: (data.allergens || []).map((i) =>
+          normalizeText(i.value).toLowerCase(),
+        ),
+        speciality: normalizeText(data.speciality),
+        subscriptionPrice: Number(data.subscriptionPrice) || 0,
+        education: cleanedEducation,
+        experience: cleanedExperience,
+        externalLinks: (data.externalLinks || []).map((i) =>
+          normalizeText(i.value),
+        ),
       };
 
-      // Close dialog immediately
       dlgRef.current?.close();
 
       await dispatch(updateProfile(payload)).unwrap();
 
-      // Reset form with latest saved data
-      reset(data);
+      reset({
+        ...data,
+        avatar: null,
+        education: cleanedEducation,
+        experience: cleanedExperience,
+      });
     } catch (error) {
       console.error("Profile update failed:", error);
     }
+  };
+
+  const handleClose = () => {
+    reset();
+    dlgRef.current?.close();
   };
 
   return (
@@ -509,7 +375,6 @@ export default function EditChefProfileDialog() {
       className="modal backdrop-blur-sm"
     >
       <div className="modal-box w-full max-w-3xl bg-white shadow-2xl border border-orange-100 rounded-3xl p-0 overflow-hidden">
-        {/* Dialog Header */}
         <div className="bg-linear-to-r from-orange-50 to-amber-50 px-6 py-4 border-b border-orange-100 flex items-center justify-between">
           <h3
             id="edit-chef-profile-title"
@@ -519,11 +384,11 @@ export default function EditChefProfileDialog() {
             Edit Chef Profile
           </h3>
 
-          {/* Close dialog button */}
           <button
             type="button"
             className="btn btn-sm btn-circle btn-ghost text-gray-500 hover:bg-orange-100 hover:text-orange-600"
-            onClick={() => dlgRef.current?.close()}
+            onClick={handleClose}
+            aria-label="Close dialog"
           >
             <AiOutlineClose className="w-5 h-5" />
           </button>
@@ -531,9 +396,7 @@ export default function EditChefProfileDialog() {
 
         <div className="p-6 sm:p-8 max-h-[80vh] overflow-y-auto custom-scrollbar">
           <form className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
-            {/* Avatar and Basic Information */}
             <div className="flex flex-col sm:flex-row gap-8 items-start">
-              {/* Avatar Upload Section */}
               <div className="flex flex-col items-center gap-3 w-full sm:w-auto">
                 <div className="relative group">
                   <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-orange-50 ring-2 ring-orange-100">
@@ -550,7 +413,6 @@ export default function EditChefProfileDialog() {
                     )}
                   </div>
 
-                  {/* Upload avatar trigger */}
                   <label
                     htmlFor="avatar-upload"
                     aria-label="Upload avatar"
@@ -559,7 +421,6 @@ export default function EditChefProfileDialog() {
                     <FaCamera className="w-4 h-4" />
                   </label>
 
-                  {/* Hidden file input */}
                   <input
                     id="avatar-upload"
                     type="file"
@@ -589,9 +450,7 @@ export default function EditChefProfileDialog() {
                 )}
               </div>
 
-              {/* Name and Bio Section */}
               <div className="flex-1 space-y-4 w-full">
-                {/* Display Name Field */}
                 <div className="form-control w-full">
                   <label className="label pt-0">
                     <span className="label-text font-bold text-gray-700">
@@ -617,7 +476,6 @@ export default function EditChefProfileDialog() {
                   )}
                 </div>
 
-                {/* Bio Field */}
                 <div className="form-control w-full">
                   <label className="label">
                     <span className="label-text font-bold text-gray-700">
@@ -637,7 +495,6 @@ export default function EditChefProfileDialog() {
 
             <div className="divider"></div>
 
-            {/* Food Preferences Section */}
             <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
                 <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2 mb-4">
@@ -646,7 +503,6 @@ export default function EditChefProfileDialog() {
                 </h4>
               </div>
 
-              {/* Cuisine Selection */}
               <div className="form-control md:col-span-2">
                 <label className="label">
                   <span className="label-text font-bold text-gray-700">
@@ -666,7 +522,6 @@ export default function EditChefProfileDialog() {
                 </select>
               </div>
 
-              {/* Dietary Preferences */}
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-bold text-gray-700">
@@ -681,7 +536,6 @@ export default function EditChefProfileDialog() {
                     onChange={(e) => setDietaryDraft(e.target.value)}
                   >
                     <option value="">Select Option</option>
-
                     {DIETARY_OPTIONS.map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
@@ -718,7 +572,6 @@ export default function EditChefProfileDialog() {
                 </div>
               </div>
 
-              {/* Allergens Section */}
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-bold text-gray-700">
@@ -733,7 +586,6 @@ export default function EditChefProfileDialog() {
                     onChange={(e) => setAllergenDraft(e.target.value)}
                   >
                     <option value="">Select Option</option>
-
                     {ALLERGEN_OPTIONS.map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
@@ -773,14 +625,12 @@ export default function EditChefProfileDialog() {
 
             <div className="divider"></div>
 
-            {/* Chef Professional Section */}
             <section className="space-y-6">
               <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
                 <FaBriefcase className="text-orange-500" />
                 Professional Background
               </h4>
 
-              {/* Culinary Speciality */}
               <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-semibold text-gray-600 flex items-center gap-2">
@@ -799,15 +649,8 @@ export default function EditChefProfileDialog() {
                     </option>
                   ))}
                 </select>
-
-                {errors.speciality && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.speciality.message}
-                  </span>
-                )}
               </div>
 
-              {/* Subscription Price */}
               <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-semibold text-gray-600 flex items-center gap-2">
@@ -833,330 +676,224 @@ export default function EditChefProfileDialog() {
                 )}
               </div>
 
-              {/* Education / Certification */}
               <div className="form-control w-full">
-                <label className="label">
+                <label className="label flex items-center justify-between mb-3">
                   <span className="label-text font-semibold text-gray-600 flex items-center gap-2">
                     <FaGraduationCap /> Education / Certification
                   </span>
+
+                  <button
+                    type="button"
+                    className="btn btn-sm bg-orange-100 text-orange-600 border-orange-200 hover:bg-orange-200"
+                    onClick={handleAddEducationRow}
+                  >
+                    <FaPlus />
+                    Add Education
+                  </button>
                 </label>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                  <input
-                    className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
-                    placeholder="Institution Name"
-                    value={educationDraft.institution}
-                    onChange={(e) => {
-                      clearErrors("education");
-                      setEducationDraft((prev) => ({
-                        ...prev,
-                        institution: e.target.value,
-                      }));
-                    }}
-                  />
+                <div className="flex flex-col gap-3">
+                  {educationFields.length === 0 && (
+                    <p className="text-xs text-gray-400 italic">
+                      No education added yet. Click “Add Education” to create a
+                      row.
+                    </p>
+                  )}
 
-                  <input
-                    className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
-                    placeholder="Degree"
-                    value={educationDraft.degree}
-                    onChange={(e) => {
-                      clearErrors("education");
-                      setEducationDraft((prev) => ({
-                        ...prev,
-                        degree: e.target.value,
-                      }));
-                    }}
-                  />
-
-                  <input
-                    className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
-                    placeholder="Field of Study"
-                    value={educationDraft.fieldOfStudy}
-                    onChange={(e) => {
-                      clearErrors("education");
-                      setEducationDraft((prev) => ({
-                        ...prev,
-                        fieldOfStudy: e.target.value,
-                      }));
-                    }}
-                  />
-
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
-                      placeholder="Start Year"
-                      value={educationDraft.startYear}
-                      onChange={(e) => {
-                        clearErrors("education");
-                        setEducationDraft((prev) => ({
-                          ...prev,
-                          startYear: e.target.value
-                            ? Number(e.target.value)
-                            : "",
-                        }));
-                      }}
-                    />
-
-                    <input
-                      type="number"
-                      className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
-                      placeholder="End Year"
-                      value={educationDraft.endYear}
-                      onChange={(e) => {
-                        clearErrors("education");
-                        setEducationDraft((prev) => ({
-                          ...prev,
-                          endYear: e.target.value ? Number(e.target.value) : "",
-                        }));
-                      }}
-                    />
-                  </div>
-
-                  <textarea
-                    className="textarea textarea-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl md:col-span-2"
-                    placeholder="Description"
-                    value={educationDraft.description}
-                    onChange={(e) => {
-                      clearErrors("education");
-                      setEducationDraft((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }));
-                    }}
-                  />
-                </div>
-
-                {errors.education && (
-                  <div className="text-red-500 text-xs my-1">
-                    {errors.education.message}
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  className="btn bg-orange-100 text-orange-600 border-orange-200 hover:bg-orange-200 mb-3"
-                  onClick={handleAddEducation}
-                >
-                  <FaPlus /> Add Education
-                </button>
-
-                <div className="flex flex-col gap-2">
                   {educationFields.map((field, idx) => (
                     <div
                       key={field.id}
-                      className="p-3 bg-orange-50/50 border border-orange-100 rounded-lg"
+                      className="p-4 bg-orange-50/50 border border-orange-100 rounded-xl"
                     >
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                          <p className="font-semibold text-gray-800">
-                            {field.degree} - {field.fieldOfStudy}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {field.institution}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {field.startYear} - {field.endYear || "Present"}
-                          </p>
-                          {field.description && (
-                            <p className="text-xs text-gray-500">
-                              {field.description}
-                            </p>
-                          )}
+                      <div className="flex justify-between items-start gap-3 mb-3">
+                        <div className="font-semibold text-gray-800">
+                          Education #{idx + 1}
                         </div>
 
                         <button
                           type="button"
                           onClick={() => removeEducation(idx)}
                           className="btn btn-xs btn-circle bg-red-50 text-red-500 hover:bg-red-100 border-none"
+                          aria-label="Remove education row"
                         >
                           <FaTrash className="w-3 h-3" />
                         </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input
+                          className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
+                          placeholder="Institution Name"
+                          {...register(`education.${idx}.institution`)}
+                        />
+
+                        <input
+                          className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
+                          placeholder="Degree"
+                          {...register(`education.${idx}.degree`)}
+                        />
+
+                        <input
+                          className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
+                          placeholder="Field of Study"
+                          {...register(`education.${idx}.fieldOfStudy`)}
+                        />
+
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
+                            placeholder="Start Year"
+                            {...register(`education.${idx}.startYear`, {
+                              valueAsNumber: true,
+                            })}
+                          />
+
+                          <input
+                            type="number"
+                            className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
+                            placeholder="End Year"
+                            {...register(`education.${idx}.endYear`, {
+                              valueAsNumber: true,
+                            })}
+                          />
+                        </div>
+
+                        <textarea
+                          className="textarea textarea-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl md:col-span-2"
+                          placeholder="Description"
+                          {...register(`education.${idx}.description`)}
+                        />
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Work Experience */}
               <div className="form-control w-full">
-                <label className="label">
+                <label className="label flex items-center justify-between mb-3">
                   <span className="label-text font-semibold text-gray-600 flex items-center gap-2">
                     <FaBriefcase /> Work Experience
                   </span>
+
+                  <button
+                    type="button"
+                    className="btn btn-sm bg-orange-100 text-orange-600 border-orange-200 hover:bg-orange-200"
+                    onClick={handleAddExperienceRow}
+                  >
+                    <FaPlus />
+                    Add Work Experience
+                  </button>
                 </label>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                  <input
-                    className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
-                    placeholder="Title"
-                    value={workDraft.title}
-                    onChange={(e) => {
-                      clearErrors("experience");
-                      setWorkDraft((prev) => ({
-                        ...prev,
-                        title: e.target.value,
-                      }));
-                    }}
-                  />
-
-                  <select
-                    className="select select-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl uppercase"
-                    value={workDraft.employmentType}
-                    onChange={(e) => {
-                      clearErrors("experience");
-                      setWorkDraft((prev) => ({
-                        ...prev,
-                        employmentType: e.target.value,
-                      }));
-                    }}
-                  >
-                    <option value="">Select Employment Type</option>
-                    {EMPLOYMENT_TYPE_OPTIONS.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-
-                  <input
-                    className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl md:col-span-2"
-                    placeholder="Company or Organization"
-                    value={workDraft.companyOrOrganization}
-                    onChange={(e) => {
-                      clearErrors("experience");
-                      setWorkDraft((prev) => ({
-                        ...prev,
-                        companyOrOrganization: e.target.value,
-                      }));
-                    }}
-                  />
-
-                  <label className="flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 md:col-span-2 cursor-pointer">
-                    <span className="text-sm font-medium text-gray-700">
-                      Currently working here
-                    </span>
-
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-warning toggle-sm"
-                      checked={workDraft.isCurrentlyWorking}
-                      onChange={(e) => {
-                        clearErrors("experience");
-                        setWorkDraft((prev) => ({
-                          ...prev,
-                          isCurrentlyWorking: e.target.checked,
-                          endYear: e.target.checked ? "" : prev.endYear,
-                        }));
-                      }}
-                    />
-                  </label>
-
-                  <input
-                    type="number"
-                    className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
-                    placeholder="Start Year"
-                    value={workDraft.startYear}
-                    onChange={(e) => {
-                      clearErrors("experience");
-                      setWorkDraft((prev) => ({
-                        ...prev,
-                        startYear: e.target.value ? Number(e.target.value) : "",
-                      }));
-                    }}
-                  />
-
-                  {!workDraft.isCurrentlyWorking ? (
-                    <input
-                      type="number"
-                      className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
-                      placeholder="End Year"
-                      value={workDraft.endYear}
-                      onChange={(e) => {
-                        clearErrors("experience");
-                        setWorkDraft((prev) => ({
-                          ...prev,
-                          endYear: e.target.value ? Number(e.target.value) : "",
-                        }));
-                      }}
-                    />
-                  ) : (
-                    <div className="hidden md:block" />
+                <div className="flex flex-col gap-3">
+                  {workFields.length === 0 && (
+                    <p className="text-xs text-gray-400 italic">
+                      No work experience added yet. Click “Add Work Experience”
+                      to create a row.
+                    </p>
                   )}
 
-                  <textarea
-                    className="textarea textarea-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl md:col-span-2"
-                    placeholder="Description"
-                    value={workDraft.description}
-                    onChange={(e) => {
-                      clearErrors("experience");
-                      setWorkDraft((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }));
-                    }}
-                  />
-                </div>
+                  {workFields.map((field, idx) => {
+                    const isWorking = watch(
+                      `experience.${idx}.isCurrentlyWorking`,
+                    );
 
-                {errors.experience && (
-                  <div className="text-red-500 text-xs my-1">
-                    {errors.experience.message}
-                  </div>
-                )}
+                    return (
+                      <div
+                        key={field.id}
+                        className="p-4 bg-orange-50/50 border border-orange-100 rounded-xl"
+                      >
+                        <div className="flex justify-between items-start gap-3 mb-3">
+                          <div className="font-semibold text-gray-800">
+                            Experience #{idx + 1}
+                          </div>
 
-                <button
-                  type="button"
-                  className="btn bg-orange-100 text-orange-600 border-orange-200 hover:bg-orange-200 mb-3"
-                  onClick={handleAddExperience}
-                >
-                  <FaPlus /> Add Work Experience
-                </button>
-
-                <div className="flex flex-col gap-2">
-                  {workFields.map((field, idx) => (
-                    <div
-                      key={field.id}
-                      className="p-3 bg-orange-50/50 border border-orange-100 rounded-lg"
-                    >
-                      <div className="flex justify-between items-start gap-3">
-                        <div className="space-y-1">
-                          <p className="font-semibold text-gray-800">
-                            {field.title}
-                          </p>
-
-                          <p className="text-sm text-gray-600">
-                            {field.employmentType} •{" "}
-                            {field.companyOrOrganization}
-                          </p>
-
-                          <p className="text-xs text-gray-500">
-                            {field.startYear} -{" "}
-                            {field.isCurrentlyWorking
-                              ? "Present"
-                              : field.endYear || "Present"}
-                          </p>
-
-                          {field.description && (
-                            <p className="text-xs text-gray-500">
-                              {field.description}
-                            </p>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeExperience(idx)}
+                            className="btn btn-xs btn-circle bg-red-50 text-red-500 hover:bg-red-100 border-none"
+                            aria-label="Remove work experience row"
+                          >
+                            <FaTrash className="w-3 h-3" />
+                          </button>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => removeExperience(idx)}
-                          className="btn btn-xs btn-circle bg-red-50 text-red-500 hover:bg-red-100 border-none"
-                        >
-                          <FaTrash className="w-3 h-3" />
-                        </button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <input
+                            className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
+                            placeholder="Title"
+                            {...register(`experience.${idx}.title`)}
+                          />
+
+                          <select
+                            className="select select-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl uppercase"
+                            {...register(`experience.${idx}.employmentType`)}
+                          >
+                            <option value="">Select Employment Type</option>
+                            {EMPLOYMENT_TYPE_OPTIONS.map((type) => (
+                              <option key={type} value={type}>
+                                {type}
+                              </option>
+                            ))}
+                          </select>
+
+                          <input
+                            className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl md:col-span-2"
+                            placeholder="Company or Organization"
+                            {...register(
+                              `experience.${idx}.companyOrOrganization`,
+                            )}
+                          />
+
+                          <label className="flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 md:col-span-2 cursor-pointer">
+                            <span className="text-sm font-medium text-gray-700">
+                              Currently working here
+                            </span>
+
+                            <input
+                              type="checkbox"
+                              className="toggle toggle-warning toggle-sm"
+                              {...register(
+                                `experience.${idx}.isCurrentlyWorking`,
+                              )}
+                            />
+                          </label>
+
+                          <input
+                            type="number"
+                            className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
+                            placeholder="Start Year"
+                            {...register(`experience.${idx}.startYear`, {
+                              valueAsNumber: true,
+                            })}
+                          />
+
+                          {!isWorking ? (
+                            <input
+                              type="number"
+                              className="input input-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl"
+                              placeholder="End Year"
+                              {...register(`experience.${idx}.endYear`, {
+                                valueAsNumber: true,
+                              })}
+                            />
+                          ) : (
+                            <div className="hidden md:block" />
+                          )}
+
+                          <textarea
+                            className="textarea textarea-bordered w-full bg-gray-50 focus:bg-white border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100/50 rounded-xl md:col-span-2"
+                            placeholder="Description"
+                            {...register(`experience.${idx}.description`)}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Website & Social Links */}
               <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-semibold text-gray-600 flex items-center gap-2">
@@ -1168,7 +905,7 @@ export default function EditChefProfileDialog() {
                   <div className="relative flex-1">
                     <FaLink className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
-                      className={`input input-bordered w-full pl-10 border-gray-200 focus:border-orange-400 rounded-xl ${
+                      className={`input input-bordered w-full pl-5 border-gray-200 focus:border-orange-400 rounded-xl ${
                         errors.externalLinks ? "input-error" : ""
                       }`}
                       placeholder="https://portfolio.com"
@@ -1215,6 +952,7 @@ export default function EditChefProfileDialog() {
                         type="button"
                         onClick={() => removeLink(idx)}
                         className="btn btn-xs btn-circle btn-ghost text-red-400 hover:bg-red-50 hover:text-red-600"
+                        aria-label="Remove link"
                       >
                         <FaTrash />
                       </button>
@@ -1230,12 +968,11 @@ export default function EditChefProfileDialog() {
               </div>
             </section>
 
-            {/* Dialog Footer */}
             <div className="flex items-center justify-end gap-3 pt-6 border-t border-orange-100">
               <button
                 type="button"
                 className="btn btn-ghost hover:bg-gray-100 rounded-xl"
-                onClick={() => dlgRef.current?.close()}
+                onClick={handleClose}
               >
                 Cancel
               </button>

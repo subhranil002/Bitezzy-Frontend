@@ -9,7 +9,6 @@ import {
   FaLink,
   FaLock,
   FaRupeeSign,
-  FaStar,
   FaUsers,
   FaUtensils,
 } from "react-icons/fa";
@@ -17,6 +16,7 @@ import { GiTakeMyMoney } from "react-icons/gi";
 import { useDispatch, useSelector } from "react-redux";
 
 import createSubscriptionApi from "../../apis/user/createSubscriptionApi";
+import ChefReviews from "../../components/chefProfile/ChefReviews";
 import ConfirmSubscriptionDialog from "../../components/chefProfile/ConfirmSubscriptionDialog";
 import EditChefProfileDialog from "../../components/chefProfile/editChefProfileDialog";
 import RecipeCard from "../../components/recipe/RecipeCard";
@@ -35,13 +35,10 @@ function ChefProfile({ profileData }) {
       (id) => id.toString() === profileData._id.toString(),
     ),
   );
-  const [loading, setLoading] = useState(false);
-  
-  // --- ADDED: Pagination State for Reviews ---
-  const [reviewPage, setReviewPage] = useState(1);
+  const [subscribeLoading, setsubscribeLoading] = useState(false);
 
   const subscribe = async () => {
-    setLoading(true);
+    setsubscribeLoading(true);
     if (!subscribed) {
       const subscription = await createSubscriptionApi({
         chefId: profileData._id,
@@ -62,29 +59,33 @@ function ChefProfile({ profileData }) {
         },
         handler: async function () {
           setSubscribed(true);
-          await dispatch(getProfile());
+          dispatch(getProfile());
         },
       };
 
       const paymentObject = new window.Razorpay(options);
       paymentObject.open();
     }
-    setLoading(false);
+    setsubscribeLoading(false);
   };
 
-  const getAverageRating = () => {
-    if (!profileData?.recipes || profileData.recipes.length === 0) return "N/A";
+  const getAverageRecipeRating = () => {
+    const recipes = profileData?.chefProfile?.recipes;
 
-    const allRatings = profileData.recipes.flatMap(
-      (recipe) => recipe?.reviews?.map((rev) => rev.rating) || [],
+    if (!recipes || recipes.length === 0) {
+      return "0.0";
+    }
+
+    const ratedRecipes = recipes.filter(
+      (recipe) => Number(recipe.averageRating) > 0,
     );
 
-    if (allRatings.length === 0) return "0.0";
+    const total = ratedRecipes.reduce(
+      (sum, recipe) => sum + Number(recipe.averageRating),
+      0,
+    );
 
-    const avgRating =
-      allRatings.reduce((sum, rating) => sum + rating, 0) / allRatings.length;
-
-    return avgRating.toFixed(1);
+    return (total / ratedRecipes.length).toFixed(1);
   };
 
   const stats = [
@@ -94,16 +95,15 @@ function ChefProfile({ profileData }) {
     },
     {
       label: "Recipes",
-      value: profileData?.recipes?.length || 0,
+      value: profileData?.chefProfile?.recipes?.length || 0,
     },
     {
-      label: "Chef Type",
-      value:
-        profileData?.chefProfile?.subscriptionPrice > 0 ? "Premium" : "Free",
+      label: "Chef Rating",
+      value: profileData?.chefProfile?.averageRating,
     },
     {
       label: "Recipe Rating",
-      value: getAverageRating(),
+      value: getAverageRecipeRating(),
     },
   ];
 
@@ -118,15 +118,6 @@ function ChefProfile({ profileData }) {
     return url;
   }
 
-  // --- ADDED: Review Pagination Logic ---
-  const REVIEWS_PER_PAGE = 4;
-  const reviewsList = profileData?.chefProfile?.reviews || [];
-  const totalReviewPages = Math.ceil(reviewsList.length / REVIEWS_PER_PAGE);
-  const currentReviews = reviewsList.slice(
-    (reviewPage - 1) * REVIEWS_PER_PAGE,
-    reviewPage * REVIEWS_PER_PAGE
-  );
-
   return (
     <>
       {isOwnProfile && (
@@ -137,7 +128,8 @@ function ChefProfile({ profileData }) {
       )}
       <ConfirmSubscriptionDialog
         profileData={profileData}
-        loading={loading}
+        averageRecipeRating={getAverageRecipeRating()}
+        loading={subscribeLoading}
         onConfirm={subscribe}
       />
       <HomeLayout>
@@ -309,7 +301,7 @@ function ChefProfile({ profileData }) {
                         .getElementById("confirm-subscription")
                         ?.showModal()
                     }
-                    disabled={loading}
+                    disabled={subscribeLoading}
                     className={`btn gap-2 ${
                       subscribed
                         ? "btn-outline border-orange-400 text-orange-600 hover:bg-orange-50"
@@ -467,12 +459,12 @@ function ChefProfile({ profileData }) {
                   <FaUtensils className="text-orange-500" />
                   Recipes by {profileData?.profile?.name}
                 </h3>
-                {profileData?.recipes?.length ? (
+                {profileData?.chefProfile?.recipes?.length ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {profileData.recipes.map((recipe, idx) => (
+                    {profileData?.chefProfile?.recipes.map((recipe, idx) => (
                       <div className="flex justify-center" key={idx}>
                         <RecipeCard
-                          key={recipe._id.toString()}
+                          key={recipe?._id.toString()}
                           recipe={recipe}
                         />
                       </div>
@@ -486,101 +478,11 @@ function ChefProfile({ profileData }) {
               </div>
             </div>
 
-            {/* 🚨 REBUILT: Cool & Paginated Reviews Section 🚨 */}
-            <div className="card bg-white shadow-xl border border-orange-100 mt-10 overflow-hidden">
-              <div className="h-1.5 bg-linear-to-r from-orange-400 via-red-400 to-amber-400"></div>
-              <div className="card-body p-6 sm:p-8">
-                <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 shadow-sm">
-                    <FaStar className="w-5 h-5" />
-                  </div>
-                  What Subscribers Say
-                </h3>
-
-                {currentReviews.length > 0 ? (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {currentReviews.map((rev) => (
-                        <div
-                          key={rev._id.toString()}
-                          className="bg-orange-50/50 rounded-2xl p-6 border border-orange-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col"
-                        >
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="avatar">
-                              <div className="w-10 h-10 rounded-full bg-white border border-orange-200 overflow-hidden">
-                                <img
-                                  src={rev.userId?.profile?.avatar?.secure_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(rev.name || "Anonymous")}`}
-                                  alt={rev.userId?.profile?.name || "Subscriber"}
-                                  loading="lazy"
-                                />
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-gray-800 text-sm">
-                                {rev.userId?.profile?.name || "Anonymous Subscriber"}
-                              </h4>
-                              <div className="flex gap-0.5 mt-0.5">
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                  <FaStar
-                                    key={i}
-                                    className={`w-3 h-3 ${
-                                      i < (rev.rating || 5)
-                                        ? "text-yellow-400"
-                                        : "text-gray-200"
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          <p className="text-gray-600 text-sm italic leading-relaxed grow">
-                            "{rev.message}"
-                          </p>
-                          {rev.createdAt && (
-                            <span className="text-xs text-gray-400 mt-4 block text-right font-medium">
-                              {new Date(rev.createdAt).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Pagination Controls */}
-                    {totalReviewPages > 1 && (
-                      <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-100">
-                        <button
-                          disabled={reviewPage === 1}
-                          onClick={() => setReviewPage((prev) => prev - 1)}
-                          className="btn btn-sm btn-outline border-orange-200 text-orange-600 hover:bg-orange-50 disabled:opacity-50 rounded-xl px-4 py-2"
-                        >
-                          Previous
-                        </button>
-                        
-                        <span className="text-sm font-semibold text-gray-600">
-                          Page {reviewPage} of {totalReviewPages}
-                        </span>
-                        
-                        <button
-                          disabled={reviewPage === totalReviewPages}
-                          onClick={() => setReviewPage((prev) => prev + 1)}
-                          className="btn btn-sm btn-outline border-orange-200 text-orange-600 hover:bg-orange-50 disabled:opacity-50 rounded-xl px-4 py-2"
-                        >
-                          Next
-                        </button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center py-10 text-gray-500 font-medium">
-                    No subscriber reviews yet.
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Reviews Section */}
+            <ChefReviews
+              chefId={profileData?._id}
+              modifyCloudinaryURL={modifyCloudinaryURL}
+            />
 
             {/* Only visible to the chef themselves */}
             {isOwnProfile && (

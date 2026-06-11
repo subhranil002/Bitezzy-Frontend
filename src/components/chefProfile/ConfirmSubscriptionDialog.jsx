@@ -1,7 +1,12 @@
 import { AiOutlineClose } from "react-icons/ai";
 import { FaRupeeSign, FaStar, FaUsers, FaUtensils } from "react-icons/fa";
 
-function ConfirmSubscriptionDialog({ profileData, onConfirm, loading }) {
+function ConfirmSubscriptionDialog({
+  profileData,
+  averageRecipeRating,
+  onConfirm,
+  loading,
+}) {
   const chefName = profileData?.profile?.name || "-";
   const speciality = profileData?.chefProfile?.speciality || "-";
   const avatarUrl = profileData?.profile?.avatar?.secure_url || "";
@@ -9,23 +14,7 @@ function ConfirmSubscriptionDialog({ profileData, onConfirm, loading }) {
 
   const recipeCount = profileData?.recipes?.length || 0;
   const subscriberCount = profileData?.chefProfile?.subscribers?.length || 0;
-  const reviewCount = profileData?.chefProfile?.reviews?.length || 0;
   const experienceCount = profileData?.chefProfile?.experience?.length || 0;
-
-  const averageRating = (() => {
-    const ratings =
-      profileData?.recipes?.flatMap((recipe) =>
-        (recipe?.reviews || [])
-          .map((rev) => Number(rev?.rating))
-          .filter((rating) => Number.isFinite(rating)),
-      ) || [];
-
-    if (!ratings.length) return null;
-
-    return (
-      ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
-    ).toFixed(1);
-  })();
 
   function modifyCloudinaryURL(url) {
     if (url === "" || url === null) return "";
@@ -115,7 +104,7 @@ function ConfirmSubscriptionDialog({ profileData, onConfirm, loading }) {
 
           {/* Social Proof Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="rounded-2xl border border-orange-100 bg-orange-50 p-3 text-center hidden sm:block">
+            <div className="rounded-2xl border border-orange-100 bg-orange-50 p-3 text-center">
               <div className="flex items-center justify-center gap-1 text-rose-500 font-bold">
                 <FaUsers />
                 <span>{subscriberCount}</span>
@@ -136,18 +125,21 @@ function ConfirmSubscriptionDialog({ profileData, onConfirm, loading }) {
             <div className="rounded-2xl border border-orange-100 bg-orange-50 p-3 text-center">
               <div className="flex items-center justify-center gap-1 text-amber-400 font-bold">
                 <FaStar />
-                <span>{averageRating || "—"}</span>
+                <span>{averageRecipeRating || "—"}</span>
               </div>
               <p className="text-xs text-gray-500 mt-1 font-medium">
-                Avg. Rating
+                Recipe Rating
               </p>
             </div>
 
-            <div className="rounded-2xl border border-orange-100 bg-orange-50 p-3 text-center hidden sm:block">
-              <div className="flex items-center justify-center gap-1 text-orange-600 font-bold">
-                <span>{reviewCount}</span>
+            <div className="rounded-2xl border border-orange-100 bg-orange-50 p-3 text-center">
+              <div className="flex items-center justify-center gap-1 text-amber-400 font-bold">
+                <FaStar />
+                <span>{profileData.chefProfile.averageRating || "—"}</span>
               </div>
-              <p className="text-xs text-gray-500 mt-1 font-medium">Reviews</p>
+              <p className="text-xs text-gray-500 mt-1 font-medium">
+                Chef Rating
+              </p>
             </div>
           </div>
 
@@ -187,7 +179,7 @@ function ConfirmSubscriptionDialog({ profileData, onConfirm, loading }) {
                 </ul>
               </div>
 
-              <div className="rounded-xl bg-white/80 border border-white p-4 shadow-sm hidden sm:block">
+              <div className="rounded-xl bg-white/80 border border-white p-4 shadow-sm">
                 <p className="text-sm font-bold text-gray-800">
                   Trust indicators
                 </p>
