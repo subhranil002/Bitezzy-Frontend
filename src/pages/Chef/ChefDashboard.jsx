@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     FaChartBar,
     FaChartLine,
@@ -14,107 +14,40 @@ import {
     FaLink,
     FaCalendarAlt
 } from "react-icons/fa";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
+import getChefDashboardApi from "../../apis/user/getChefDashboardApi";
 import RecipeCard from "../../components/recipe/RecipeCard";
 import HomeLayout from "../../layouts/HomeLayout";
 
-// 🧑‍🍳 Updated data with subscribers field
-const MOCK_USER = {
-    profile: {
-        name: "Chef Aarav Sharma",
-        avatar: {
-            secure_url:
-                "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=60",
-        },
-        bio: "Award-winning chef specializing in Indian fusion cuisine with over 10 years of experience.",
-        cuisine: ["indian", "fusion", "continental"],
-        dietaryLabels: ["high-protein", "vegetarian"],
-    },
-    chefProfile: {
-        education: "Le Cordon Bleu, Paris",
-        experience: "10 years of culinary excellence specializing in Indian fusion cuisine. Former head chef at 'Spice Route' restaurant.",
-        externalLinks: [
-            "https://www.instagram.com/chefaarav",
-            "https://www.youtube.com/@chefaarav",
-        ],
-        subscriptionPrice: 7.99,
-        subscribers: ["user1", "user2", "user3", "user4", "user5"], // 5 subscribers
-        recipes: [
-            {
-                _id: "r101",
-                title: "Paneer Tikka Masala",
-                thumbnail: {
-                    secure_url: "https://recipes.timesofindia.com/thumb/54408184.cms?imgsize=148310&width=800&height=800"
-                },
-                description: "Grilled paneer cubes simmered in rich, spiced tomato gravy.",
-                isPremium: true,
-                servings: 4,
-                cuisine: "Indian",
-                tags: ["Spicy", "Vegetarian", "Dinner"],
-                views: 54321,
-                averageRating: 4.9,
-                reviewCount: 128,
-                totalCookingTime: 45,
-                likes: 89
-            },
-            {
-                _id: "r102",
-                title: "Chocolate Lava Cake",
-                thumbnail: {
-                    secure_url: "https://tse2.mm.bing.net/th/id/OIP.mD9uvqMGLhaAxor-MWFSiQHaKX?rs=1&pid=ImgDetMain&o=7&rm=3"
-                },
-                description: " vanilla ice cream.",
-                isPremium: false,
-                servings: 2,
-                cuisine: "French",
-                tags: ["Dessert", "Chocolate", "Sweet"],
-                views: 21890,
-                averageRating: 4.7,
-                reviewCount: 89,
-                totalCookingTime: 30,
-                likes: 67
-            },
-            {
-                _id: "r103",
-                title: "Mango Lassi Smoothie",
-                thumbnail: {
-                    secure_url: "https://tse2.mm.bing.net/th/id/OIP.rQSjsk71q8SFuYx22ioqNwHaIo?rs=1&pid=ImgDetMain&o=7&rm=3"
-                },
-                description: "Refreshing and sweet mango yogurt drink perfect for summer.",
-                isPremium: false,
-                servings: 2,
-                cuisine: "Indian",
-                tags: ["Drink", "Vegetarian", "Cooling"],
-                views: 12050,
-                averageRating: 4.5,
-                reviewCount: 56,
-                totalCookingTime: 10,
-                likes: 45
-            },
-        ],
-        reviews: [
-            { name: "Riya Patel", message: "Loved the fusion flavors! The recipes are amazing!", rating: 5 },
-            { name: "Carlos Rivera", message: "Recipes are easy to follow and taste incredible!", rating: 4 },
-            { name: "Priya Sharma", message: "Best Indian fusion recipes I've ever tried!", rating: 5 },
-        ],
-        averageRating: 4.8,
-    },
-    subscribers: 1250, // Total subscriber count
-    createdAt: "2021-03-22T00:00:00.000Z",
-    _id: "chef-77",
-};
-
 const ChefDashboard = () => {
     const navigate = useNavigate();
-    const [userData, setUserData] = useState(null);
+    const { userData: authUser } = useSelector((state) => state.auth);
+    const [dashboardData, setDashboardData] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Simulate fetching from backend
-        setUserData(MOCK_USER);
+        let active = true;
+        const fetchDashboardData = async () => {
+            try {
+                const response = await getChefDashboardApi();
+                if (response?.success && active) {
+                    setDashboardData(response.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch chef dashboard:", error);
+            } finally {
+                if (active) setLoading(false);
+            }
+        };
+        fetchDashboardData();
+        return () => {
+            active = false;
+        };
     }, []);
 
-    if (!userData) {
+    if (loading || !dashboardData || !authUser) {
         return (
             <HomeLayout>
                 <div className="flex justify-center items-center min-h-screen">
@@ -124,21 +57,16 @@ const ChefDashboard = () => {
         );
     }
 
-    const { chefProfile, profile } = userData;
-
-    const stats = {
-        totalLikes: chefProfile.recipes.reduce((sum, r) => sum + (r.views || 0), 0),
-        subscribers: userData.subscribers || 0,
-        monthlyEarnings: Math.round(chefProfile.subscriptionPrice * userData.subscribers),
-        totalRecipes: chefProfile.recipes.length,
-        averageRating: chefProfile.averageRating
-    };
+    const { profile, _id } = authUser;
+    const { stats, topRecipes, recentReviews } = dashboardData;
 
     return (
         <HomeLayout>
-            <div className="min-h-screen bg-linear-to-br from-orange-50 via-rose-50 to-amber-50">
-                <div className="container mx-auto px-4 py-8 space-y-8">
-                    {/* Header Section */}
+            {/* Note: Standardized to bg-gradient-to-br. If you are using a specific v4 plugin for bg-linear, revert this class */}
+            <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-amber-50">
+                <div className="container mx-auto px-4 py-8 space-y-10">
+
+                    {/* --- Header Section (Unchanged) --- */}
                     <div className="flex flex-col lg:flex-row gap-8">
                         {/* Chef Profile Card */}
                         <div className="card bg-base-100 shadow-xl border border-orange-100 lg:flex-1">
@@ -150,16 +78,14 @@ const ChefDashboard = () => {
                                         </div>
                                     </div>
                                     <div className="flex-1">
-                                        <h1 className="card-title text-3xl bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                                        <h1 className="card-title text-3xl bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
                                             {profile.name}
                                         </h1>
                                         <p className="text-gray-600 mt-2">{profile.bio}</p>
-
-                                        {/* Cuisine Tags */}
                                         <div className="flex flex-wrap gap-2 mt-4">
-                                            {profile.cuisine?.map((cuisine, index) => (
+                                            {[].concat(profile.cuisine || []).map((cuisineItem, index) => (
                                                 <div key={index} className="badge badge-outline border-orange-400 text-orange-500">
-                                                    {cuisine}
+                                                    {cuisineItem}
                                                 </div>
                                             ))}
                                         </div>
@@ -172,16 +98,16 @@ const ChefDashboard = () => {
                         <div className="card bg-base-100 shadow-xl border border-orange-100 w-full lg:w-80">
                             <div className="card-body">
                                 <h3 className="card-title text-gray-800">Quick Actions</h3>
-                                <div className="space-y-3">
+                                <div className="space-y-3 mt-2">
                                     <button
-                                        className="btn btn-neutral w-full gap-2"
+                                        className="btn w-full gap-2 bg-orange-500 hover:bg-orange-600 border-none text-white"
                                         onClick={() => navigate("/recipe/add")}
                                     >
                                         <FaPlus className="w-4 h-4" />
                                         Add New Recipe
                                     </button>
                                     <button
-                                        className="btn btn-outline border-orange-300 text-orange-600 w-full gap-2"
+                                        className="btn btn-outline border-orange-300 text-orange-600 w-full gap-2 hover:bg-orange-50 hover:border-orange-400"
                                         onClick={() => navigate(`/profile/${userData._id}`)}
                                     >
                                         <FaEye className="w-4 h-4" />
@@ -192,95 +118,70 @@ const ChefDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Main Stats Grid */}
+                    {/* --- Main Stats Grid (Unchanged) --- */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {[
-                            {
-                                label: "Total Likes",
-                                icon: FaHeart,
-                                value: stats.totalLikes.toLocaleString(), color: "text-blue-500"
-                            },
-                            {
-                                label: "Subscribers",
-                                icon: FaUsers,
-                                value: stats.subscribers.toLocaleString(),
-                                color: "text-green-500"
-                            },
-                            {
-                                label: "Monthly Earnings",
-                                icon: FaDollarSign,
-                                value: `$${stats.monthlyEarnings.toLocaleString()}`,
-                                color: "text-emerald-500"
-                            },
-                            {
-                                label: "Average Rating",
-                                icon: FaStar,
-                                value: `${stats.averageRating}/5`,
-                                color: "text-purple-500"
-                            },
-                        ].map(({ label, icon: Icon, value, growth, color }) => (
+                            { label: "Total Likes", icon: FaHeart, value: stats.totalLikes.toLocaleString(), color: "text-rose-500" },
+                            { label: "Subscribers", icon: FaUsers, value: stats.subscribers.toLocaleString(), color: "text-orange-500" },
+                            { label: "Monthly Earnings", icon: FaDollarSign, value: `$${stats.monthlyEarnings.toLocaleString()}`, color: "text-emerald-500" },
+                            { label: "Average Rating", icon: FaStar, value: `${stats.averageRating}/5`, color: "text-amber-500" },
+                        ].map(({ label, icon: Icon, value, color }) => (
                             <div key={label} className="card bg-base-100 shadow-lg border border-orange-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                                 <div className="card-body p-6">
                                     <div className="flex items-center justify-between mb-4">
-                                        <div className="text-sm font-semibold text-gray-600">{label}</div>
-                                        <Icon className={`w-6 h-6 ${color}`} />
+                                        <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{label}</div>
+                                        <div className={`p-2 rounded-lg bg-orange-50 ${color}`}>
+                                            <Icon className="w-5 h-5" />
+                                        </div>
                                     </div>
-                                    <div className="text-2xl font-bold text-gray-800 mb-2">
+                                    <div className="text-3xl font-bold text-gray-800">
                                         {value}
-                                    </div>
-                                    <div className="text-sm text-green-500 font-medium">
-                                        {growth}
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
 
-                    {/* Recipes Section */}
-                    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div className="text-center sm:text-left">
+                    {/* --- ENHANCED: Recipes Section (Glassmorphism) --- */}
+                    <div className="space-y-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-orange-200/50 pb-4">
+                            <div>
                                 <h2 className="text-2xl font-bold text-gray-800">Your Top Recipes</h2>
-                                <p className="text-gray-600">Manage and track your recipe performance</p>
+                                <p className="text-gray-500 text-sm mt-1">Manage and track your recipe performance</p>
                             </div>
-                            <div className="flex justify-center sm:justify-end">
-                                <button
-                                    className="btn btn-neutral w-full sm:w-auto gap-2"
-                                    onClick={() => navigate("/recipe/add")}
-                                >
-                                    <FaPlus className="w-4 h-4" />
-                                    New Recipe
-                                </button>
-                            </div>
+                            <button
+                                className="btn btn-primary bg-orange-500 hover:bg-orange-600 border-none text-white gap-2 shadow-md"
+                                onClick={() => navigate("/recipe/add")}
+                            >
+                                <FaPlus className="w-4 h-4" />
+                                New Recipe
+                            </button>
                         </div>
 
-                        {chefProfile.recipes.length > 0 ? (
-                            <div className="flex flex-wrap justify-center gap-6 ">
-                                {chefProfile.recipes.map((recipe) => (
+                        {topRecipes.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-2">
+                                {topRecipes.map((recipe) => (
                                     <div
                                         key={recipe._id}
-                                        className="w-full sm:w-[48%] lg:w-[30%] flex flex-col items-center"
+                                        className="card bg-white/30 backdrop-blur-md border border-white/50 shadow-lg hover:shadow-2xl hover:bg-white/40 transition-all duration-300 overflow-hidden group rounded-2xl"
                                     >
-                                        {/* Fix overflow and center the card */}
-                                        <div className="w-full flex justify-center overflow-hidden">
-                                            <RecipeCard recipe={recipe} />
-                                        </div>
+                                        {/* Ensure your RecipeCard component itself has a transparent background! */}
+                                        <RecipeCard recipe={recipe} />
 
-                                        {/* Footer area */}
-                                        <div className="w-full p-4 border-t border-orange-100 mt-4 bg-base-100 shadow-sm rounded-lg">
-                                            <div className="flex justify-between text-sm">
-                                                <span
-                                                    className={`badge ${recipe.isPremium ? "badge-primary" : "badge-ghost"}`}
-                                                >
+                                        <div className="p-4 bg-white/20 border-t border-white/30 mt-auto">
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className={`badge border-none font-medium ${recipe.isPremium ? "bg-amber-100/80 text-amber-800" : "bg-white/50 text-gray-700"}`}>
                                                     {recipe.isPremium ? "Premium" : "Free"}
                                                 </span>
-                                                <div className="flex items-center gap-1">
-                                                    <FaHeart className="w-4 h-4 text-rose-400" />
-                                                    <span className="font-medium">{recipe.likes}</span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <FaStar className="w-4 h-4 text-yellow-400" />
-                                                    <span className="font-medium">{recipe.averageRating}</span>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="flex items-center gap-1.5 text-gray-700 group-hover:text-rose-500 transition-colors">
+                                                        <FaHeart className="w-4 h-4" />
+                                                        <span className="font-semibold">{recipe.likes}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-gray-700 group-hover:text-amber-500 transition-colors">
+                                                        <FaStar className="w-4 h-4" />
+                                                        <span className="font-semibold">{recipe.averageRating}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -288,14 +189,16 @@ const ChefDashboard = () => {
                                 ))}
                             </div>
                         ) : (
-                            <div className="card bg-base-100 shadow-xl text-center py-12">
-                                <FaUtensils className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                            <div className="card border-2 border-dashed border-orange-200 bg-white/20 backdrop-blur-sm text-center py-16 shadow-none rounded-2xl">
+                                <div className="w-20 h-20 bg-orange-100/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <FaUtensils className="w-10 h-10 text-orange-400" />
+                                </div>
                                 <h3 className="text-xl font-bold text-gray-700 mb-2">No recipes yet</h3>
-                                <p className="text-gray-500 mb-6">
-                                    Start creating amazing recipes to build your subscriber base
+                                <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+                                    Start creating amazing recipes to build your subscriber base and showcase your culinary skills.
                                 </p>
                                 <button
-                                    className="btn btn-primary gap-2"
+                                    className="btn btn-primary bg-orange-500 hover:bg-orange-600 border-none text-white gap-2"
                                     onClick={() => navigate("/recipe/add")}
                                 >
                                     <FaPlus className="w-4 h-4" />
@@ -303,43 +206,60 @@ const ChefDashboard = () => {
                                 </button>
                             </div>
                         )}
-
                     </div>
 
-
-                    {/* Additional Info Section */}
-                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-                        {/* Recent Reviews */}
-                        <div className="card bg-base-100 shadow-xl border border-orange-100">
-                            <div className="card-body">
-                                <h3 className="card-title text-gray-800">
-                                    <FaStar className="text-yellow-400" />
+                    {/* --- ENHANCED: Recent Reviews Section --- */}
+                    <div className="card bg-base-100 shadow-xl border border-orange-100">
+                        <div className="card-body">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="card-title text-gray-800 flex items-center gap-2">
+                                    <FaStar className="text-amber-400 w-5 h-5" />
                                     Recent Reviews
                                 </h3>
-                                <div className="space-y-4 max-h-80 overflow-y-auto">
-                                    {chefProfile.reviews.slice(0, 3).map((review, index) => (
-                                        <div key={index} className="border-b border-orange-100 pb-4 last:border-0">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="font-semibold text-gray-800">{review.name}</span>
-                                                <div className="rating rating-xs">
+                            </div>
+
+                            {recentReviews.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                                    {recentReviews.map((review, index) => (
+                                        <div key={index} className="bg-orange-50/50 rounded-2xl p-5 border border-orange-100 transition-transform hover:-translate-y-1">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="avatar">
+                                                        <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-orange-200">
+                                                            {review.avatar ? (
+                                                                <img src={review.avatar} alt={review.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <span className="text-orange-700 font-bold">{review.name.charAt(0).toUpperCase()}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <span className="font-semibold text-gray-800">{review.name}</span>
+                                                </div>
+                                                <div className="rating rating-sm">
                                                     {[...Array(5)].map((_, i) => (
                                                         <input
                                                             key={i}
                                                             type="radio"
-                                                            className="mask mask-star-2 bg-yellow-400"
+                                                            className="mask mask-star-2 bg-amber-400"
                                                             checked={i < review.rating}
                                                             readOnly
+                                                            disabled
                                                         />
                                                     ))}
                                                 </div>
                                             </div>
-                                            <p className="text-gray-600 text-sm">{review.message}</p>
+                                            <p className="text-gray-600 text-sm italic leading-relaxed">
+                                                "{review.message}"
+                                            </p>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            ) : (
+                                <p className="text-gray-500 text-center py-6">No reviews yet. Keep cooking!</p>
+                            )}
                         </div>
                     </div>
+
                 </div>
             </div>
         </HomeLayout>
