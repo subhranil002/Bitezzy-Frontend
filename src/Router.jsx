@@ -7,6 +7,7 @@ import RequireAuth from "./components/auth/RequireAuth";
 import AboutPage from "./pages/About";
 import AdminDashboard from "./pages/AdminDashboard";
 import Chat from "./pages/Bitebot/Chat";
+import Dashboard from "./pages/Dashboard";
 import AddRecipe from "./pages/Chef/AddRecipe";
 import ChefDashboard from "./pages/Chef/ChefDashboard";
 import EditRecipe from "./pages/Chef/EditRecipe";
@@ -23,6 +24,7 @@ import SignUp from "./pages/Signup";
 import TeamPage from "./pages/TeamPage";
 import Favorites from "./pages/User/Favourites";
 import { getProfile } from "./redux/slices/authSlice";
+import AdminOnly from "./components/auth/AdminOnly";
 
 function Router() {
   const dispatch = useDispatch();
@@ -60,12 +62,11 @@ function Router() {
         <Route path="/profile/:id/favourites" element={<Favorites />} />
         <Route path="/recipe/:id" element={<RecipeDetail />} />
         <Route path="/contact" element={<ContactUs />} />
-        <Route path="/admindashboard" element={<AdminDashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Route>
       <Route element={<ChefOnly />}>
         <Route path="/recipe/add" element={<AddRecipe />} />
         <Route path="/recipe/edit/:id" element={<EditRecipe />} />
-        <Route path="/dashboard" element={<ChefDashboard />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

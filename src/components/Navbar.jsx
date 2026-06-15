@@ -246,7 +246,7 @@ export default function Navbar({ children }) {
                         <FaUser className="text-orange-500" /> My Profile
                       </Link>
                     </li>
-                    {role === "CHEF" && (
+                    {(role === "CHEF" || role === "ADMIN") && (
                       <li>
                         <Link
                           to="/dashboard"

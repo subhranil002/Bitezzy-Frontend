@@ -17,7 +17,7 @@ import {
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import getChefDashboardApi from "../../apis/user/getChefDashboardApi";
+import getDashboardApi from "../../apis/user/getDashboardApi";
 import RecipeCard from "../../components/recipe/RecipeCard";
 import HomeLayout from "../../layouts/HomeLayout";
 
@@ -31,7 +31,7 @@ const ChefDashboard = () => {
         let active = true;
         const fetchDashboardData = async () => {
             try {
-                const response = await getChefDashboardApi();
+                const response = await getDashboardApi();
                 if (response?.success && active) {
                     setDashboardData(response.data);
                 }

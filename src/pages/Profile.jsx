@@ -77,9 +77,11 @@ export default function Profile() {
   if (loading) return <Loading />;
 
   // Render profile based on role
-  if (currUser?.role === "USER") {
+  if (currUser?.role === "USER" || currUser?.role === "ADMIN") {
     return <UserProfile profileData={currUser} />;
   } else if (currUser?.role === "CHEF") {
     return <ChefProfile profileData={currUser} />;
   }
+
+  return null;
 }
