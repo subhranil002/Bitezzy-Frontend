@@ -11,25 +11,22 @@ export default function FeaturedRecipeCard2({ recipe }) {
     >
       <div className="rounded-2xl overflow-hidden pointer-events-none">
         <img
-          src={
-            recipe?.thumbnail?.secure_url ||
-            "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=400&q=80"
-          }
+          src={recipe?.thumbnail?.secure_url}
           className="w-full h-24 md:h-32 object-cover transition-transform duration-700 group-hover:scale-110"
-          alt={recipe?.title || "Pasta"}
+          alt={recipe?.title}
         />
       </div>
 
       <div className="mt-3 md:mt-4 px-2 pb-1">
         <h3 className="font-bold text-slate-800 text-xs md:text-sm tracking-tight">
-          {recipe?.title || "Garlic Pasta"}
+          {recipe?.title}
         </h3>
 
         <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-slate-500 mt-1 md:mt-1.5 font-medium">
           <FaStar className="text-amber-400 w-3 h-3 md:w-3.5 md:h-3.5" />
-          {recipe?.averageRating || "4.8"}
+          {recipe?.averageRating}
           <span className="mx-0.5">•</span>
-          {(recipe && `${recipe.totalCookingTime}m`) || "25m"}
+          {`${recipe?.totalCookingTime}m`}
         </div>
       </div>
     </div>

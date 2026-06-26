@@ -18,7 +18,7 @@ import { GiHerbsBundle } from "react-icons/gi";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import { LOGO_URL } from "../constants";
+import { LOGO_TEXT_URL, LOGO_URL } from "../constants";
 import { logout } from "../redux/slices/authSlice";
 
 const colorClasses = {
@@ -161,11 +161,7 @@ export default function Navbar({ children }) {
                 className="btn btn-ghost group flex items-center gap-3 px-2 rounded-2xl hover:bg-transparent"
                 aria-label="Bitezzy home"
               >
-                <div className="flex flex-col justify-center">
-                  <span className="text-xl md:text-2xl font-black tracking-tight ">
-                    Bitezzy
-                  </span>
-                </div>
+                <img src={LOGO_TEXT_URL} alt="Bitezzy" className="h-6 md:h-8" />
               </Link>
             </div>
 
@@ -323,9 +319,7 @@ export default function Navbar({ children }) {
                 </div>
               </div>
               <div>
-                <h2 className="font-black text-2xl tracking-tight text-gray-900">
-                  Bitezzy
-                </h2>
+                <img src={LOGO_TEXT_URL} alt="Bitezzy" className="h-6" />
                 <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">
                   Discover. Cook. Impress. Repeat
                 </p>

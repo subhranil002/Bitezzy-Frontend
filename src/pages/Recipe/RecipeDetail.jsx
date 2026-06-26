@@ -19,6 +19,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import getSimilarRecipesApi from "../../apis/recipe/getSimilarRecipesApi";
 import likeRecipeApi from "../../apis/recipe/likeRecipeApi";
 import unlikeRecipeApi from "../../apis/recipe/unlikeRecipeApi";
+import BannerAd1 from "../../components/ads/BannerAd1";
+import BannerAd2 from "../../components/ads/BannerAd2";
 import Loading from "../../components/Loading";
 import RecipeCarousel from "../../components/recipe/RecipeCarousel";
 import RecipeReviews from "../../components/RecipeReviews";
@@ -772,6 +774,9 @@ function RecipeDetail() {
 
               {/* Sidebar */}
               <div className="flex flex-col h-full min-h-0 space-y-6">
+                {/* Banner Ad */}
+                {/* <BannerAd1 /> */}
+                
                 {/* I MADE IT WIDGET */}
                 <div
                   className={`card shadow-lg transition-all duration-500 border-2 shrink-0 ${
@@ -906,6 +911,9 @@ function RecipeDetail() {
                 <div className="flex-1 min-h-0 flex flex-col items-stretch pb-0 lg:pb-2">
                   <RecipeReviews recipeId={recipe._id.toString()} />
                 </div>
+
+                {/* Banner Ad */}
+                {/* <BannerAd2 /> */}
               </div>
             </div>
 

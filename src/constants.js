@@ -60,7 +60,7 @@ export const EMAIL_REGEX =
 export const SORT_OPTIONS = ["relevance", "rating", "popularity", "time"];
 
 export const LOGO_URL =
-  "https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/logo.png";
+  "https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/logo-v3.png";
 
 export const UNIT_OPTIONS = [
   // Weight
@@ -91,3 +91,6 @@ export const UNIT_OPTIONS = [
   "dash",
   "handful",
 ];
+
+export const LOGO_TEXT_URL =
+  "https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/logo-text.png";

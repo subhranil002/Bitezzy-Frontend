@@ -1,5 +1,3 @@
-// Finalized
-
 import HeroSection from "../components/home/HeroSection";
 import RecipeCarousels from "../components/home/RecipeCarousels";
 import HomeLayout from "../layouts/HomeLayout";

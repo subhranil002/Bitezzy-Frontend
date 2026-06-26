@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { getTrendingPremium } from "../../redux/slices/homeSlice";
 import FeaturedRecipeCard1 from "./FeaturedRecipeCard1";
@@ -11,6 +11,7 @@ import FeaturedRecipeCard4 from "./FeaturedRecipeCard4";
 
 export default function HeroSection() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { trendingPremium } = useSelector((state) => ({
     trendingPremium: state.home.trendingPremium,
   }));
@@ -26,22 +27,29 @@ export default function HeroSection() {
       {/* --- STUDIO LIGHTING & TEXTURE --- */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_0%,transparent_70%)] pointer-events-none" />
 
-      {/* Card 1: Top Left */}
-      <FeaturedRecipeCard1 recipe={trendingPremium[0]} />
+      {trendingPremium.length == 4 && (
+        <>
+          {/* Card 1: Top Left */}
+          <FeaturedRecipeCard1 recipe={trendingPremium[0]} />
 
-      {/* Card 2: Top Right */}
-      <FeaturedRecipeCard2 recipe={trendingPremium[1]} />
+          {/* Card 2: Top Right */}
+          <FeaturedRecipeCard2 recipe={trendingPremium[1]} />
 
-      {/* Card 3: Bottom Left */}
-      <FeaturedRecipeCard3 recipe={trendingPremium[2]} />
+          {/* Card 3: Bottom Left */}
+          <FeaturedRecipeCard3 recipe={trendingPremium[2]} />
 
-      {/* Card 4: Bottom Right */}
-      <FeaturedRecipeCard4 recipe={trendingPremium[3]} />
+          {/* Card 4: Bottom Right */}
+          <FeaturedRecipeCard4 recipe={trendingPremium[3]} />
+        </>
+      )}
 
       {/* --- CTA --- */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 text-center max-w-4xl pointer-events-none">
         {/* Top Badge */}
-        <div className="inline-flex items-center justify-center gap-2.5 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200/60 text-slate-600 font-bold text-xs sm:text-sm mb-8 sm:mb-10 shadow-sm pointer-events-auto transition-transform hover:scale-105 cursor-default">
+        <div 
+        className="inline-flex items-center justify-center gap-2.5 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200/60 text-slate-600 font-bold text-xs sm:text-sm mb-8 sm:mb-10 shadow-sm pointer-events-auto transition-transform hover:scale-105 cursor-pointer"
+        onClick={() => navigate("/chat")}
+        >
           <div className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-orange-500"></span>

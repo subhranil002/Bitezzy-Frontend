@@ -7,7 +7,7 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
-import { LOGO_URL } from "../constants";
+import { LOGO_TEXT_URL, LOGO_URL } from "../constants";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -22,11 +22,17 @@ export default function Footer() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8 mb-12">
           <div className="max-w-2xl">
             <Link to="/" className="inline-block mb-6 group">
-              <div className="w-12 h-12 rounded-4xl flex items-center justify-center shadow-lg bg-white border border-orange-100 overflow-hidden transition-transform duration-500 group-hover:-rotate-3 group-hover:scale-105">
+              <div className="w-50 h-16 rounded-4xl flex items-center justify-center gap-1 px-5 shadow-lg bg-white border border-orange-100 overflow-hidden">
                 <img
                   src={LOGO_URL}
                   alt="Bitezzy Logo"
-                  className="w-full h-full object-cover"
+                  className="h-14 w-auto object-contain flex-shrink-0"
+                />
+
+                <img
+                  src={LOGO_TEXT_URL}
+                  alt="Bitezzy Logo Text"
+                  className="h-8 w-auto object-contain"
                 />
               </div>
             </Link>
