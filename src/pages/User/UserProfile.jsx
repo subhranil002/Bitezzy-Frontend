@@ -1,10 +1,12 @@
 import { FaCalendarAlt, FaEdit, FaLock } from "react-icons/fa";
 import { useSelector } from "react-redux";
 
+import BannerAd from "../../components/ads/BannerAd";
 import ChangePasswordDialog from "../../components/userProfile/ChangePasswordDialog";
 import EditProfileDialog from "../../components/userProfile/EditProfileDialog";
 import ProfileStats from "../../components/userProfile/ProfileStats";
 import ProfileTabs from "../../components/userProfile/ProfileTabs";
+import { PROFILE_BANNER_SCRIPT } from "../../constants";
 import HomeLayout from "../../layouts/HomeLayout";
 
 function UserProfile({ profileData }) {
@@ -131,6 +133,9 @@ function UserProfile({ profileData }) {
                 <ProfileStats profileData={profileData} />
               </div>
             </div>
+
+            {/* Ads */}
+            <BannerAd scriptUrl={PROFILE_BANNER_SCRIPT} />
 
             {/* 📑 Profile Tabs */}
             {isOwnProfile && (

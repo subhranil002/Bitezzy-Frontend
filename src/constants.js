@@ -94,3 +94,12 @@ export const UNIT_OPTIONS = [
 
 export const LOGO_TEXT_URL =
   "https://lyrmkpqpg9ryov0u.public.blob.vercel-storage.com/logo-text.png";
+
+export const PROFILE_BANNER_SCRIPT =
+  "https://pricklyassociation.com/b/XTVTsBd.G/lP0/YPWkcN/Secma9JuRZmUnlNkPPTTvccxANmjoMf0hNCDIEitMNbzOE-2TM_zTQP0hN/QB";
+
+export const RECIPE_DETAIL_BANNER_SCRIPT =
+  "https://pricklyassociation.com/b.X/V-shdYGDlm0mYOWzco/kekmo9RuqZ/Uol/kpPgTrcMxANGjKMc2-MTj/EstUNDzMET2YMuzIYIyRNgQv";
+
+export const CONTACT_US_BANNER_SCRIPT =
+  "https://pricklyassociation.com/bZXqVVsxd.GdlE0lYdW/cz/heFmb9Du/ZuU/lpkUPsTNcnxONPzbMG5wMoTsMgtrNHzdEi3yMJzYkVx/NawI";
