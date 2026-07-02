@@ -16,7 +16,6 @@ import { GiTakeMyMoney } from "react-icons/gi";
 import { useDispatch, useSelector } from "react-redux";
 
 import createSubscriptionApi from "../../apis/user/createSubscriptionApi";
-import BannerAd from "../../components/ads/BannerAd";
 import ChefReviews from "../../components/chefProfile/ChefReviews";
 import ConfirmSubscriptionDialog from "../../components/chefProfile/ConfirmSubscriptionDialog";
 import EditChefProfileDialog from "../../components/chefProfile/editChefProfileDialog";
@@ -24,7 +23,6 @@ import RecipeCard from "../../components/recipe/RecipeCard";
 import ChangePasswordDialog from "../../components/userProfile/ChangePasswordDialog";
 import ProfileStats from "../../components/userProfile/ProfileStats";
 import ProfileTabs from "../../components/userProfile/ProfileTabs";
-import { PROFILE_BANNER_SCRIPT } from "../../constants";
 import HomeLayout from "../../layouts/HomeLayout";
 import { getProfile } from "../../redux/slices/authSlice";
 
@@ -453,9 +451,6 @@ function ChefProfile({ profileData }) {
                 </div>
               </div>
             )}
-
-            {/* Ads */}
-            <BannerAd scriptUrl={PROFILE_BANNER_SCRIPT} />
 
             {/* Recipes */}
             <div className="card bg-base-100 shadow">

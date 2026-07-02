@@ -1,5 +1,3 @@
-// Finalized
-
 import { useEffect, useState } from "react";
 import { FaHeart, FaUtensils } from "react-icons/fa";
 import { Link } from "react-router-dom";

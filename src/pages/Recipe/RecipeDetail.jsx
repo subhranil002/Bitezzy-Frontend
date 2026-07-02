@@ -19,11 +19,9 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import getSimilarRecipesApi from "../../apis/recipe/getSimilarRecipesApi";
 import likeRecipeApi from "../../apis/recipe/likeRecipeApi";
 import unlikeRecipeApi from "../../apis/recipe/unlikeRecipeApi";
-import BannerAd from "../../components/ads/BannerAd";
 import Loading from "../../components/Loading";
 import RecipeCarousel from "../../components/recipe/RecipeCarousel";
 import RecipeReviews from "../../components/RecipeReviews";
-import { RECIPE_DETAIL_BANNER_SCRIPT } from "../../constants";
 import HomeLayout from "../../layouts/HomeLayout";
 import { getRecipeById, resetRecipe } from "../../redux/slices/recipeSlice";
 import {
@@ -774,8 +772,6 @@ function RecipeDetail() {
 
               {/* Sidebar */}
               <div className="flex flex-col h-full min-h-0 space-y-6">
-                {/* Banner Ad */}
-                <BannerAd scriptUrl={RECIPE_DETAIL_BANNER_SCRIPT} />
 
                 {/* I MADE IT WIDGET */}
                 <div

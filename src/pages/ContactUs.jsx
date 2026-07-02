@@ -14,8 +14,6 @@ import {
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 
 import contactUsApi from "../apis/user/contactUsApi";
-import BannerAd from "../components/ads/BannerAd";
-import { CONTACT_US_BANNER_SCRIPT } from "../constants";
 import HomeLayout from "../layouts/HomeLayout";
 
 /* Custom marker icon for the map */
@@ -185,8 +183,6 @@ export default function ContactUs() {
                   </div>
                 </div>
               </div>
-              {/* Ads */}
-              <BannerAd scriptUrl={CONTACT_US_BANNER_SCRIPT} />
             </div>
           </div>
 

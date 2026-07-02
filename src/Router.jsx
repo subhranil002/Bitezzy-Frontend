@@ -5,13 +5,11 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import ChefOnly from "./components/auth/ChefOnly";
 import RequireAuth from "./components/auth/RequireAuth";
 import AboutPage from "./pages/About";
-import AdminDashboard from "./pages/AdminDashboard";
 import Chat from "./pages/Bitebot/Chat";
-import Dashboard from "./pages/Dashboard";
 import AddRecipe from "./pages/Chef/AddRecipe";
-import ChefDashboard from "./pages/Chef/ChefDashboard";
 import EditRecipe from "./pages/Chef/EditRecipe";
 import ContactUs from "./pages/ContactUs";
+import Dashboard from "./pages/Dashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -24,7 +22,6 @@ import SignUp from "./pages/Signup";
 import TeamPage from "./pages/TeamPage";
 import Favorites from "./pages/User/Favourites";
 import { getProfile } from "./redux/slices/authSlice";
-import AdminOnly from "./components/auth/AdminOnly";
 
 function Router() {
   const dispatch = useDispatch();

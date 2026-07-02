@@ -90,7 +90,6 @@ export default function SignUp() {
                 control={control}
                 name="avatar"
                 defaultValue={null}
-                rules={{ required: "Profile picture is required" }}
                 render={({ field, fieldState: { error } }) => {
                   const file = field.value?.[0];
                   const previewUrl = file ? URL.createObjectURL(file) : null;
