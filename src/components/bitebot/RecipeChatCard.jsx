@@ -1,7 +1,6 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 
-function RecipeChatCard({recipe}) {
+export default function RecipeChatCard({recipe}) {
   const navigate = useNavigate();
 
   return (
@@ -30,5 +29,3 @@ function RecipeChatCard({recipe}) {
     </div>
   );
 }
-
-export default RecipeChatCard;
