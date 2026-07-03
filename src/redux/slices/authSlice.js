@@ -31,6 +31,7 @@ const initialState = {
   isLoggedIn: authStorage.get("isLoggedIn", false),
   role: authStorage.get("role", "GUEST"),
   userData: authStorage.get("userData", {}),
+  isLoading: false,
 };
 
 const resetAuthState = (state) => {
@@ -117,6 +118,18 @@ const authSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(registerUser.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(login.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(logout.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateProfile.pending, (state) => {
+        state.isLoading = true;
+      })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoggedIn = action.payload?.success;
         state.role = action.payload?.data?.role;
@@ -124,6 +137,7 @@ const authSlice = createSlice({
         authStorage.set("isLoggedIn", action.payload?.success);
         authStorage.set("role", action.payload?.data?.role);
         authStorage.set("userData", action.payload?.data);
+        state.isLoading = false;
       })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoggedIn = action.payload?.success;
@@ -132,9 +146,11 @@ const authSlice = createSlice({
         authStorage.set("isLoggedIn", action.payload?.success);
         authStorage.set("role", action.payload?.data?.role);
         authStorage.set("userData", action.payload?.data);
+        state.isLoading = false;
       })
       .addCase(logout.fulfilled, (state) => {
         resetAuthState(state);
+        state.isLoading = false;
       })
       .addCase(getProfile.fulfilled, (state, action) => {
         state.isLoggedIn = action.payload?.success;
@@ -151,6 +167,7 @@ const authSlice = createSlice({
         authStorage.set("isLoggedIn", action.payload?.success);
         authStorage.set("role", action.payload?.data?.role);
         authStorage.set("userData", action.payload?.data);
+        state.isLoading = false;
       })
       .addMatcher(
         (action) => action.payload?.clearState,

@@ -347,7 +347,7 @@ export default function EditChefProfileDialog() {
 
       dlgRef.current?.close();
 
-      await dispatch(updateProfile(payload)).unwrap();
+      dispatch(updateProfile(payload)).unwrap();
 
       reset({
         ...data,

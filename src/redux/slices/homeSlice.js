@@ -15,6 +15,12 @@ const initialState = {
   recommendedForYou: [],
   quickAndEasy: [],
   premiumPicks: [],
+  isTrendingPremiumLoading: false,
+  isTrendingNowLoading: false,
+  isFreshAndNewLoading: false,
+  isRecommendedForYouLoading: false,
+  isQuickAndEasyLoading: false,
+  isPremiumPicksLoading: false,
 };
 
 export const getTrendingPremium = createAsyncThunk(
@@ -89,23 +95,47 @@ const homeSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(getTrendingPremium.pending, (state) => {
+        state.isTrendingPremiumLoading = true;
+      })
+      .addCase(getTrending.pending, (state) => {
+        state.isTrendingNowLoading = true;
+      })
+      .addCase(getFreshAndNew.pending, (state) => {
+        state.isFreshAndNewLoading = true;
+      })
+      .addCase(getRecommended.pending, (state) => {
+        state.isRecommendedForYouLoading = true;
+      })
+      .addCase(getQuickAndEasy.pending, (state) => {
+        state.isQuickAndEasyLoading = true;
+      })
+      .addCase(getPremium.pending, (state) => {
+        state.isPremiumPicksLoading = true;
+      })
       .addCase(getTrendingPremium.fulfilled, (state, action) => {
         state.trendingPremium = action.payload.data;
+        state.isTrendingPremiumLoading = false;
       })
       .addCase(getTrending.fulfilled, (state, action) => {
         state.trendingNow = action.payload.data;
+        state.isTrendingNowLoading = false;
       })
       .addCase(getFreshAndNew.fulfilled, (state, action) => {
         state.freshAndNew = action.payload.data;
+        state.isFreshAndNewLoading = false;
       })
       .addCase(getRecommended.fulfilled, (state, action) => {
         state.recommendedForYou = action.payload?.data;
+        state.isRecommendedForYouLoading = false;
       })
       .addCase(getQuickAndEasy.fulfilled, (state, action) => {
         state.quickAndEasy = action.payload.data;
+        state.isQuickAndEasyLoading = false;
       })
       .addCase(getPremium.fulfilled, (state, action) => {
         state.premiumPicks = action.payload.data;
+        state.isPremiumPicksLoading = false;
       })
       .addCase(logout.fulfilled, (state) => {
         state.recommendedForYou = [];

@@ -31,16 +31,12 @@ function Router() {
 
   useEffect(() => {
     if (!paths.includes(location.pathname)) {
-      (async () => {
-        await dispatch(getProfile());
-      })();
+      dispatch(getProfile());
     }
   }, [location.pathname]);
 
   useEffect(() => {
-    (async () => {
-      await dispatch(getProfile());
-    })();
+    dispatch(getProfile());
   }, []);
 
   return (

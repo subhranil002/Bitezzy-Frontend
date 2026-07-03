@@ -1,5 +1,5 @@
 import HeroSection from "../components/home/HeroSection";
-import RecipeCarousels from "../components/home/RecipeCarousels";
+import HomeCarousels from "../components/home/HomeCarousels";
 import HomeLayout from "../layouts/HomeLayout";
 
 export default function Home() {
@@ -9,7 +9,7 @@ export default function Home() {
       <HeroSection />
 
       {/* Recipe category carousels */}
-      <RecipeCarousels />
+      <HomeCarousels />
     </HomeLayout>
   );
 }

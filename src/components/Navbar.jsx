@@ -55,7 +55,9 @@ export default function Navbar({ children }) {
   const location = useLocation();
   const isHome = location.pathname === "/";
   const isSearchPage = location.pathname.includes("/search");
-  const { userData, isLoggedIn, role } = useSelector((state) => state.auth);
+  const { userData, isLoggedIn, role, isLoading } = useSelector(
+    (state) => state.auth,
+  );
 
   const sections = [
     {
@@ -272,6 +274,7 @@ export default function Navbar({ children }) {
                     <li className="border-t border-orange-100 mt-1">
                       <button
                         onClick={handleLogout}
+                        disabled={isLoading}
                         className="text-red-500 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors py-3 w-full text-left"
                       >
                         <FaSignOutAlt className="inline mr-2" />

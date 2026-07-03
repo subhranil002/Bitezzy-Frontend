@@ -12,14 +12,12 @@ import FeaturedRecipeCard4 from "./FeaturedRecipeCard4";
 export default function HeroSection() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { trendingPremium } = useSelector((state) => ({
-    trendingPremium: state.home.trendingPremium,
-  }));
+  const { trendingPremium, isTrendingPremiumLoading } = useSelector(
+    (state) => state.home,
+  );
 
   useEffect(() => {
-    (async () => {
-      dispatch(getTrendingPremium(4));
-    })();
+    dispatch(getTrendingPremium(4));
   }, []);
 
   return (
@@ -27,7 +25,7 @@ export default function HeroSection() {
       {/* --- STUDIO LIGHTING & TEXTURE --- */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_0%,transparent_70%)] pointer-events-none" />
 
-      {trendingPremium.length == 4 && (
+      {!isTrendingPremiumLoading && (
         <>
           {/* Card 1: Top Left */}
           <FeaturedRecipeCard1 recipe={trendingPremium[0]} />
@@ -46,9 +44,9 @@ export default function HeroSection() {
       {/* --- CTA --- */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 text-center max-w-4xl pointer-events-none">
         {/* Top Badge */}
-        <div 
-        className="inline-flex items-center justify-center gap-2.5 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200/60 text-slate-600 font-bold text-xs sm:text-sm mb-8 sm:mb-10 shadow-sm pointer-events-auto transition-transform hover:scale-105 cursor-pointer"
-        onClick={() => navigate("/chat")}
+        <div
+          className="inline-flex items-center justify-center gap-2.5 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200/60 text-slate-600 font-bold text-xs sm:text-sm mb-8 sm:mb-10 shadow-sm pointer-events-auto transition-transform hover:scale-105 cursor-pointer"
+          onClick={() => navigate("/chat")}
         >
           <div className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>

@@ -1,5 +1,3 @@
-// Finalized
-
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FaTimes } from "react-icons/fa";
@@ -22,7 +20,7 @@ export default function SignUp() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     watch,
     control,
   } = useForm();
@@ -42,21 +40,18 @@ export default function SignUp() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || location.state?.from || "/";
-  const { isLoggedIn } = useSelector((state) => state.auth);
+  const { isLoggedIn, isLoading } = useSelector((state) => state.auth);
 
-  // submit handler — dispatch register and navigate on success
-  const onSubmit = async (data) => {
-    const res = await dispatch(registerUser(data));
-    if (res?.payload?.success) navigate(from, { replace: true });
+  const onSubmit = (data) => {
+    dispatch(registerUser(data));
   };
 
   // redirect if already logged in
   useEffect(() => {
     if (isLoggedIn) {
-      const from = location.state?.from?.pathname || "/";
       navigate(from, { replace: true });
     }
-  }, [isLoggedIn, navigate, location]);
+  }, [isLoggedIn]);
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 p-6">
@@ -428,10 +423,10 @@ export default function SignUp() {
           <div className="col-span-1 md:col-span-2 mt-6">
             <button
               className="btn w-full bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-xl hover:shadow-lg transition-all duration-300 relative overflow-hidden group"
-              disabled={isSubmitting}
+              disabled={isLoading}
             >
               <span className="relative z-10">
-                {isSubmitting ? "Signing up..." : "Sign Up"}
+                {isLoading ? "Signing up..." : "Sign Up"}
               </span>
               <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>

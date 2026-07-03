@@ -1,5 +1,3 @@
-// Finalized
-
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FiEye, FiEyeOff } from "react-icons/fi";
@@ -14,34 +12,20 @@ export default function Login() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm();
 
-  const [showPassword, setShowPassword] = useState(false); // toggle password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || location.state?.from || "/";
-  const { isLoggedIn } = useSelector((state) => state.auth);
+  const { isLoggedIn, isLoading } = useSelector((state) => state.auth);
 
-  // Dispatch login action and navigate on success
-  const onSubmit = async (data) => {
-    const res = await dispatch(login(data));
-    if (res?.payload?.success) {
-      navigate(from, { replace: true });
-    }
+  const onSubmit = (data) => {
+    dispatch(login(data));
   };
 
-  // const handleGuest = async () => {
-  //       setIsSubmitting(true);
-  //       const res = await dispatch(guestLogin());
-  //       if (res?.payload?.success) {
-  //           navigate(from, { replace: true });
-  //       }
-  //       setIsSubmitting(false);
-  //   };
-
-  // Decorative floating icons reference
   const floatingIconsRef = useRef(FloatingIcons);
 
   // Redirect if already logged in
@@ -149,11 +133,11 @@ export default function Login() {
           {/* Submit button */}
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isLoading}
             className="btn w-full bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 relative overflow-hidden group"
           >
             <span className="relative z-10">
-              {isSubmitting ? "Logging in..." : "Continue"}
+              {isLoading ? "Logging in..." : "Continue"}
             </span>
             <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </button>
