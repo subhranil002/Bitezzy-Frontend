@@ -7,10 +7,10 @@ export default async function addChefReviewApi(chefId, reviewData) {
   toast.promise(res, {
     loading: "Submitting review...",
     success: (data) => {
-      return data?.data?.message || "Review submitted successfully";
+      return data?.data?.message;
     },
     error: (err) => {
-      return err?.response?.data?.message || "Failed to submit review";
+      return err?.response?.data?.message;
     },
   });
 

@@ -44,7 +44,7 @@ function ProfileStats({ profileData }) {
       id: "cuisine",
       icon: FaGlobe,
       label: "Favourite Cuisine",
-      value: profileData?.profile?.cuisine || "N/A",
+      value: profileData?.profile?.cuisine.toUpperCase() || "N/A",
       iconColor: "text-purple-500",
       iconBg: "bg-purple-50",
     },

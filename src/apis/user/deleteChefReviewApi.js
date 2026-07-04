@@ -7,10 +7,10 @@ export default async function deleteChefReviewApi(chefId) {
   toast.promise(res, {
     loading: "Deleting review...",
     success: (data) => {
-      return data?.data?.message || "Review deleted successfully";
+      return data?.data?.message;
     },
     error: (err) => {
-      return err?.response?.data?.message || "Failed to delete review";
+      return err?.response?.data?.message;
     },
   });
 
