@@ -50,7 +50,6 @@ export default function AddRecipe() {
       description: "",
       cuisine: "",
       servings: "",
-      prepMinutes: "",
       cookMinutes: "",
       isPremium: false,
       dietaryLabels: [],
@@ -86,7 +85,6 @@ export default function AddRecipe() {
         "description",
         "cuisine",
         "servings",
-        "prepMinutes",
         "cookMinutes",
         "thumbnailFile",
       ];
@@ -134,8 +132,7 @@ export default function AddRecipe() {
     setIsSubmitting(true);
 
     try {
-      const totalCookingTime =
-        (Number(data.prepMinutes) || 0) + (Number(data.cookMinutes) || 0);
+      const totalCookingTime = Number(data.cookMinutes) || 0;
 
       const ingredients = (data.ingredients || []).map((ing) => ({
         name: ing.name?.trim(),
@@ -212,16 +209,17 @@ export default function AddRecipe() {
 
   return (
     <HomeLayout>
-      <FormProvider
-        {...{
-          register,
-          watch,
-          setValue,
-          control,
-          formState: { errors },
-        }}
-      >
-        <form className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-amber-50 py-8">
+        <FormProvider
+          {...{
+            register,
+            watch,
+            setValue,
+            control,
+            formState: { errors },
+          }}
+        >
+          <form className="container mx-auto px-4 max-w-4xl">
           {/* --- Stepper & Progress Bar --- */}
           <div className="mb-10">
             <div className="flex items-center justify-between relative">
@@ -266,7 +264,7 @@ export default function AddRecipe() {
               })}
 
               {/* Background Line */}
-              <div className="absolute top-6 left-0 right-0 h-1 bg-base-200 -z-10 rounded-full overflow-hidden">
+              <div className="absolute top-6 left-0 right-0 h-1 bg-base-200 z-0 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-yellow-500 transition-all duration-500 ease-in-out"
                   style={{
@@ -278,8 +276,13 @@ export default function AddRecipe() {
           </div>
 
           {/* --- Main Form Content --- */}
-          <div className="card bg-base-100 shadow-xl border border-base-200">
-            <div className="card-body p-6 md:p-8">
+          <div className={`card bg-base-100 shadow-lg rounded-3xl transition-all duration-500 ${
+            currentStep === 1 ? 'border border-orange-100 border-t-4 border-t-orange-500' :
+            currentStep === 2 ? 'border border-orange-100 border-t-4 border-r-4 border-t-orange-500 border-r-orange-500' :
+            currentStep === 3 ? 'border border-orange-100 border-t-4 border-r-4 border-b-4 border-t-orange-500 border-r-orange-500 border-b-orange-500' :
+            'border-4 border-orange-500'
+          }`}>
+            <div className="card-body p-6 md:p-10">
               {currentStep === 1 && (
                 <Step1BasicDetails
                   cuisineOptions={CUISINE_OPTIONS}
@@ -301,7 +304,7 @@ export default function AddRecipe() {
               <button
                 type="button"
                 onClick={() => navigate("/")} // Navigate back to home
-                className="btn btn-ghost text-base-content/50 hover:text-error hover:bg-error/10 gap-2 transition-all"
+                className="btn border-none bg-base-200 text-base-content/60 hover:text-error hover:bg-error/10 gap-2 transition-all rounded-2xl"
               >
                 <FaHome className="w-4 h-4" /> Cancel
               </button>
@@ -309,7 +312,7 @@ export default function AddRecipe() {
               <button
                 type="button"
                 onClick={prevStep}
-                className="btn btn-outline border-base-300 text-base-content/60 hover:bg-base-200 hover:border-base-300 hover:text-base-content gap-2 transition-all"
+                className="btn border-none bg-base-200 text-base-content/60 hover:text-base-content hover:bg-base-300 gap-2 transition-all rounded-2xl"
               >
                 <FaChevronLeft className="w-3 h-3" /> Back
               </button>
@@ -320,7 +323,7 @@ export default function AddRecipe() {
               <button
                 type="button"
                 onClick={nextStep}
-                className="btn bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600 gap-2 px-8 shadow-sm hover:shadow-md"
+                className="btn bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600 gap-2 px-8 rounded-2xl shadow-lg shadow-orange-500/40 hover:shadow-orange-500/60 transition-all"
               >
                 Next Step <FaChevronRight className="w-3 h-3" />
               </button>
@@ -329,7 +332,7 @@ export default function AddRecipe() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleSubmit(onSubmit)}
-                className="btn gap-2 bg-green-600 hover:bg-green-700 text-white border-green-600 hover:border-green-700 px-8 shadow-sm hover:shadow-md"
+                className="btn gap-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 px-10 rounded-2xl shadow-lg shadow-orange-500/40 hover:shadow-orange-500/60 transition-all"
               >
                 {!isSubmitting && <FaCheckCircle className="w-4 h-4" />}
                 {isSubmitting ? "Publishing Recipe..." : "Publish Recipe"}
@@ -338,6 +341,7 @@ export default function AddRecipe() {
           </div>
         </form>
       </FormProvider>
+      </div>
     </HomeLayout>
   );
 }

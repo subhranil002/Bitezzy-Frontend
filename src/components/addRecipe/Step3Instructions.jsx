@@ -26,7 +26,9 @@ const Step3Instructions = () => {
   };
 
   return (
-    <div className="space-y-8 p-1">
+    <div className="space-y-8 p-1 relative z-0">
+      {/* Cool Background Graphic */}
+      <div className="absolute -inset-6 md:-inset-10 bg-[url('https://res.cloudinary.com/dpoqek1ce/image/upload/food_tjm7b4.png')] opacity-70 mix-blend-overlay pointer-events-none -z-10 bg-repeat bg-[length:800px] rounded-3xl"></div>
       
       {/* --- Header Section --- */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 border-b border-base-200 pb-4">
@@ -133,7 +135,7 @@ const Step3Instructions = () => {
                           message: "Max 1000 characters",
                         },
                       })}
-                      className={`textarea textarea-bordered max-h-[14rem] resize-y text-base w-full focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all ${
+                      className={`textarea textarea-bordered max-h-[14rem] resize-y text-base w-full rounded-xl focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all ${
                         errors?.steps?.[index]?.text ? "textarea-error" : ""
                       }`}
                     />

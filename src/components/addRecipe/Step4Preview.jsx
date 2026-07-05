@@ -16,9 +16,9 @@ const formatLabel = (str) =>
 const Step4Preview = () => {
   const { watch } = useFormContext();
   const formData = watch();
+  console.log(formData);
 
-  const totalTime =
-    (Number(formData.prepMinutes) || 0) + (Number(formData.cookMinutes) || 0);
+  const totalTime = Number(formData.cookMinutes) || 0;
 
   const estimatedPrice = (formData.ingredients || []).reduce(
     (t, ing) => t + (Number(ing.marketPrice) || 0),
@@ -29,7 +29,9 @@ const Step4Preview = () => {
     formData.servings > 0 ? estimatedPrice / formData.servings : 0;
 
   return (
-    <div className="space-y-6 p-1">
+    <div className="space-y-6 p-1 relative z-0">
+      {/* Cool Background Graphic */}
+      <div className="absolute -inset-6 md:-inset-10 bg-[url('https://res.cloudinary.com/dpoqek1ce/image/upload/food_tjm7b4.png')] opacity-90 mix-blend-overlay pointer-events-none -z-10 bg-repeat bg-[length:800px] rounded-3xl"></div>
       
       {/* Page Header */}
       <div className="border-b border-base-200 pb-4">
@@ -50,6 +52,12 @@ const Step4Preview = () => {
                 {formData.thumbnailFile ? (
                     <img 
                         src={URL.createObjectURL(formData.thumbnailFile)} 
+                        className="absolute inset-0 w-full h-full object-cover" 
+                        alt="Recipe Thumbnail" 
+                    />
+                ) : formData.existingThumbnailUrl ? (
+                    <img 
+                        src={formData.existingThumbnailUrl} 
                         className="absolute inset-0 w-full h-full object-cover" 
                         alt="Recipe Thumbnail" 
                     />
