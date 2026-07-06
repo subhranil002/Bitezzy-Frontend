@@ -18,7 +18,9 @@ import { useDispatch, useSelector } from "react-redux";
 import createSubscriptionApi from "../../apis/user/createSubscriptionApi";
 import ChefReviews from "../../components/chefProfile/ChefReviews";
 import ConfirmSubscriptionDialog from "../../components/chefProfile/ConfirmSubscriptionDialog";
+import EditChefProfileDialog from "../../components/chefProfile/EditChefProfileDialog";
 import RecipeCard from "../../components/recipe/RecipeCard";
+import ChangePasswordDialog from "../../components/userProfile/ChangePasswordDialog";
 import ProfileStats from "../../components/userProfile/ProfileStats";
 import ProfileTabs from "../../components/userProfile/ProfileTabs";
 import HomeLayout from "../../layouts/HomeLayout";
@@ -112,10 +114,12 @@ function ChefProfile() {
 
   return (
     <>
-      {/* {isOwnProfile && (
+      {isOwnProfile && (
         <>
+          <EditChefProfileDialog />
+          <ChangePasswordDialog />
         </>
-      )} */}
+      )}
       <ConfirmSubscriptionDialog
         userProfile={userProfile}
         chefProfile={chefProfile}
@@ -218,13 +222,10 @@ function ChefProfile() {
                     </div>
                     <span>
                       Joined{" "}
-                      {new Date(profileCreatedAt).toLocaleDateString(
-                        "en-IN",
-                        {
-                          month: "long",
-                          year: "numeric",
-                        },
-                      )}
+                      {new Date(profileCreatedAt).toLocaleDateString("en-IN", {
+                        month: "long",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
 
