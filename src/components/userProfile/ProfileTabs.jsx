@@ -8,31 +8,20 @@ import {
   FaStar,
   FaUsers,
 } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import getReviewsGivenApi from "../../apis/user/getReviewsGivenApi";
+import { fetchReviewsGiven } from "../../redux/slices/profileSlice";
 
-function ProfileTabs({ profileData }) {
+function ProfileTabs() {
   const navigate = useNavigate();
-  const { userData } = useSelector((state) => state.auth);
-
-  const isOwnProfile =
-    userData?._id?.toString() === profileData?._id?.toString();
-
+  const { isOwnProfile, role, reviewsGiven, subscribers, subscribed } =
+    useSelector((state) => state.profile);
   const [activeTab, setActiveTab] = useState(
-    profileData?.role === "CHEF" ? "subscribers" : "subscribed",
+    role === "CHEF" ? "subscribers" : "subscribed",
   );
-
+  const dispatch = useDispatch();
   const [reviewPage, setReviewPage] = useState(1);
-  const [reviewsGiven, setReviewsGiven] = useState([]);
-  const [reviewsMeta, setReviewsMeta] = useState({
-    page: 1,
-    limit: 4,
-    totalReviews: 0,
-    totalPages: 0,
-  });
-  const [loadingReviews, setLoadingReviews] = useState(false);
 
   function modifyCloudinaryURL(url) {
     if (!url) return "";
@@ -46,7 +35,7 @@ function ProfileTabs({ profileData }) {
   }
 
   const tabs = [
-    profileData?.role === "CHEF" && {
+    role === "CHEF" && {
       key: "subscribers",
       label: "Subscribers",
       icon: FaUsers,
@@ -60,33 +49,8 @@ function ProfileTabs({ profileData }) {
   ].filter(Boolean);
 
   useEffect(() => {
-    if (activeTab !== "reviews" || !isOwnProfile) return;
-
-    const fetchReviews = async () => {
-      try {
-        setLoadingReviews(true);
-        const response = await getReviewsGivenApi(reviewPage, 4);
-
-        setReviewsGiven(response?.data?.reviewsGiven);
-        setReviewsMeta(response?.data?.meta);
-      } catch (error) {
-        console.error("Failed to fetch reviews given:", error);
-        setReviewsGiven([]);
-        setReviewsMeta({
-          page: reviewPage,
-          limit: 4,
-          totalReviews: 0,
-          totalPages: 0,
-        });
-      } finally {
-        setLoadingReviews(false);
-      }
-    };
-
-    fetchReviews();
-  }, [activeTab, reviewPage, isOwnProfile]);
-
-  const totalReviewPages = reviewsMeta?.totalPages || 0;
+    dispatch(fetchReviewsGiven({ page: reviewPage, limit: 4 }));
+  }, [reviewPage]);
 
   return (
     <div className="w-full">
@@ -98,10 +62,7 @@ function ProfileTabs({ profileData }) {
           return (
             <button
               key={tab.key}
-              onClick={() => {
-                setActiveTab(tab.key);
-                if (tab.key === "reviews") setReviewPage(1);
-              }}
+              onClick={() => setActiveTab(tab.key)}
               className={`btn gap-2 rounded-xl font-semibold transition-all duration-300 min-w-[120px] ${
                 isActive
                   ? "bg-linear-to-r from-orange-400 to-red-500 text-white shadow-lg scale-105"
@@ -122,28 +83,28 @@ function ProfileTabs({ profileData }) {
       <div className="space-y-8">
         {activeTab === "subscribers" && (
           <div className="space-y-6">
-            {profileData?.chefProfile?.subscribers?.length > 0 ? (
+            {subscribers?.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {profileData.chefProfile.subscribers.map((user) => (
+                {subscribers.map((subscriber) => (
                   <div
-                    key={user._id.toString()}
+                    key={subscriber._id.toString()}
                     className="card bg-base-100 shadow-lg border border-orange-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
                   >
                     <div className="card-body p-6">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                         <div className="avatar">
                           <div className="w-16 h-16 rounded-full ring-4 ring-orange-200 ring-offset-2 overflow-hidden">
-                            {user?.profile?.avatar?.secure_url ? (
+                            {subscriber?.profile?.avatar?.secure_url ? (
                               <img
                                 src={modifyCloudinaryURL(
-                                  user.profile.avatar.secure_url,
+                                  subscriber.profile.avatar.secure_url,
                                 )}
-                                alt={user?.profile?.name || "User"}
+                                alt={subscriber?.profile?.name || "User"}
                                 className="object-cover w-full h-full"
                               />
                             ) : (
                               <div className="w-full h-full bg-orange-100 flex items-center justify-center text-orange-500 font-bold">
-                                {(user?.profile?.name || "U").charAt(0)}
+                                {(subscriber?.profile?.name || "U").charAt(0)}
                               </div>
                             )}
                           </div>
@@ -152,12 +113,12 @@ function ProfileTabs({ profileData }) {
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-2">
                             <h4 className="text-lg font-bold text-gray-800 truncate">
-                              {user?.profile?.name}
+                              {subscriber?.profile?.name}
                             </h4>
                           </div>
 
                           <p className="text-gray-600 line-clamp-2 mb-3 text-sm">
-                            {user?.profile?.bio || "No bio available."}
+                            {subscriber?.profile?.bio || "No bio available."}
                           </p>
                         </div>
 
@@ -165,7 +126,7 @@ function ProfileTabs({ profileData }) {
                           <button
                             className="btn btn-sm btn-outline border-orange-300 text-orange-600 hover:bg-orange-50 gap-2"
                             onClick={() =>
-                              navigate(`/profile/${user._id.toString()}`)
+                              navigate(`/profile/${subscriber._id.toString()}`)
                             }
                           >
                             <FaEye className="w-3 h-3" />
@@ -194,9 +155,9 @@ function ProfileTabs({ profileData }) {
 
         {activeTab === "subscribed" && (
           <div className="space-y-6">
-            {profileData?.profile?.subscribed?.length > 0 ? (
+            {subscribed?.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {profileData.profile.subscribed.map((chef) => (
+                {subscribed.map((chef) => (
                   <div
                     key={chef._id.toString()}
                     className="card bg-base-100 shadow-lg border border-orange-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
@@ -271,17 +232,17 @@ function ProfileTabs({ profileData }) {
 
         {activeTab === "reviews" && isOwnProfile && (
           <div className="space-y-6">
-            {loadingReviews ? (
+            {reviewsGiven.loading ? (
               <div className="card bg-base-100 shadow-xl border border-orange-100">
                 <div className="card-body text-center py-16">
                   <div className="loading loading-spinner loading-lg text-orange-500 mx-auto mb-4"></div>
                   <p className="text-gray-500">Loading reviews given...</p>
                 </div>
               </div>
-            ) : reviewsGiven.length > 0 ? (
+            ) : reviewsGiven.reviews.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {reviewsGiven.map((review) => {
+                  {reviewsGiven.reviews.map((review) => {
                     const isRecipeReview = review.targetType === "Recipe";
                     const target = review?.targetId || {};
                     const targetName =
@@ -385,10 +346,10 @@ function ProfileTabs({ profileData }) {
                   })}
                 </div>
 
-                {totalReviewPages > 1 && (
+                {reviewsGiven.meta.totalPages > 1 && (
                   <div className="flex justify-between items-center mt-6 pt-4">
                     <button
-                      disabled={reviewPage === 1}
+                      disabled={reviewsGiven.meta.page === 1}
                       onClick={() => setReviewPage((prev) => prev - 1)}
                       className="btn btn-sm btn-outline border-orange-200 text-orange-600 hover:bg-orange-50 disabled:opacity-50 rounded-xl px-4 py-2"
                     >
@@ -396,11 +357,14 @@ function ProfileTabs({ profileData }) {
                     </button>
 
                     <span className="text-sm font-semibold text-gray-600">
-                      Page {reviewsMeta.page} of {totalReviewPages}
+                      Page {reviewsGiven.meta.page} of{" "}
+                      {reviewsGiven.meta.totalPages}
                     </span>
 
                     <button
-                      disabled={reviewPage === totalReviewPages}
+                      disabled={
+                        reviewsGiven.meta.page === reviewsGiven.meta.totalPages
+                      }
                       onClick={() => setReviewPage((prev) => prev + 1)}
                       className="btn btn-sm btn-outline border-orange-200 text-orange-600 hover:bg-orange-50 disabled:opacity-50 rounded-xl px-4 py-2"
                     >

@@ -11,12 +11,16 @@ import getUserByIdApi from "../../apis/user/getUserByIdApi";
 import updateChefReviewApi from "../../apis/user/updateChefReviewApi";
 
 const initialState = {
+  _id: null,
   isOwnProfile: false,
   role: "GUEST",
   userProfile: {},
+  favourites: [],
   subscribed: [],
   chefProfile: {},
   recipes: [],
+  recipesLoading: false,
+  averageRecipeRating: 0,
   subscribers: [],
 
   reviewsGiven: {
@@ -40,6 +44,9 @@ const initialState = {
     },
     loading: false,
   },
+
+  loading: false,
+  profileCreatedAt: null,
 };
 
 export const fetchUserProfile = createAsyncThunk(
@@ -52,38 +59,26 @@ export const fetchUserProfile = createAsyncThunk(
       // Own profile
       if (isOwnProfile) {
         const subscribedRes = await getSubscribedApi();
-        const reviewsGivenRes = await getReviewsGivenApi(1, 4);
 
         const baseResponse = {
+          ...getState().profile,
+          _id: currentUser._id,
           isOwnProfile: true,
           role: currentUser.role,
           userProfile: currentUser.profile,
+          favourites: currentUser.favourites,
           subscribed: subscribedRes.data,
-          reviewsGiven: {
-            reviews: reviewsGivenRes.data.reviewsGiven,
-            meta: reviewsGivenRes.data.meta,
-            loading: false,
-          },
+          profileCreatedAt: currentUser.createdAt,
+          loading: false,
         };
 
         if (currentUser.role === "CHEF") {
-          const [recipeRes, subscribersRes, reviewsReceivedRes] =
-            await Promise.all([
-              getChefRecipesApi(currentUser._id.toString()),
-              getSubscribersApi(),
-              getAllChefReviewsApi(currentUser._id.toString(), 1, 4),
-            ]);
+          const subscribersRes = await getSubscribersApi()
 
           return {
             ...baseResponse,
             chefProfile: currentUser.chefProfile,
-            recipes: recipeRes.data,
             subscribers: subscribersRes.data,
-            reviewsReceived: {
-              reviews: reviewsReceivedRes.data.reviews,
-              meta: reviewsReceivedRes.data.meta,
-              loading: false,
-            },
           };
         }
 
@@ -93,30 +88,50 @@ export const fetchUserProfile = createAsyncThunk(
       // Other user's profile
       const userDataRes = await getUserByIdApi(userId);
 
-      if (userDataRes.data.role === "CHEF") {
-        const [recipesRes, reviewsReceivedRes] = await Promise.all([
-          getChefRecipesApi(userDataRes.data._id.toString()),
-          getAllChefReviewsApi(userDataRes.data._id.toString(), 1, 4),
-        ]);
-
-        return {
-          isOwnProfile: false,
-          role: userDataRes.data.role,
-          userProfile: userDataRes.data.profile,
-          chefProfile: userDataRes.data.chefProfile,
-          recipes: recipesRes.data,
-          reviewsReceived: {
-            reviews: reviewsReceivedRes.data.reviews,
-            meta: reviewsReceivedRes.data.meta,
-            loading: false,
-          },
-        };
-      }
-
-      return {
+      const finalResponse = {
+        ...getState().profile,
+        _id: userDataRes.data._id,
         isOwnProfile: false,
         role: userDataRes.data.role,
         userProfile: userDataRes.data.profile,
+        chefProfile: userDataRes.data.chefProfile,
+        favourites: userDataRes.data.favourites,
+        profileCreatedAt: userDataRes.data.createdAt,
+        loading: false,
+      };
+
+      return finalResponse;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || error.message);
+    }
+  },
+);
+
+export const getAverageRecipeRating = (recipes) => {
+  if (!recipes || recipes.length === 0) {
+    return "0.0";
+  }
+
+  const ratedRecipes = recipes.filter(
+    (recipe) => Number(recipe.averageRating) > 0,
+  );
+
+  const total = ratedRecipes.reduce(
+    (sum, recipe) => sum + Number(recipe.averageRating),
+    0,
+  );
+
+  return (total / ratedRecipes.length).toFixed(1);
+};
+
+export const fetchRecipesByChef = createAsyncThunk(
+  "profile/fetchRecipesByChef",
+  async (chefId, { rejectWithValue }) => {
+    try {
+      const response = await getChefRecipesApi(chefId);
+      return {
+        recipes: response.data,
+        averageRecipeRating: getAverageRecipeRating(response.data),
       };
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
@@ -207,7 +222,7 @@ export const deleteChefReview = createAsyncThunk(
           userId: chefId,
           page: 1,
           limit: 4,
-        })
+        }),
       );
       return response.data;
     } catch (error) {
@@ -224,17 +239,19 @@ const profileSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchUserProfile.fulfilled, (state, action) => {
-        state.isOwnProfile = action.payload?.isOwnProfile;
-        state.role = action.payload?.role;
-        state.userProfile = action.payload?.userProfile;
-        state.subscribed = action.payload?.subscribed || [];
-        state.chefProfile = action.payload?.chefProfile || {};
-        state.recipes = action.payload?.recipes || [];
-        state.subscribers = action.payload?.subscribers || [];
-        state.reviewsGiven = action.payload?.reviewsGiven || state.reviewsGiven;
-        state.reviewsReceived =
-          action.payload?.reviewsReceived || state.reviewsReceived;
+      .addCase(fetchUserProfile.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUserProfile.fulfilled, (_, action) => {
+        return action.payload;
+      })
+      .addCase(fetchRecipesByChef.pending, (state) => {
+        state.recipesLoading = true;
+      })
+      .addCase(fetchRecipesByChef.fulfilled, (state, action) => {
+        state.recipesLoading = false;
+        state.recipes = action.payload.recipes;
+        state.averageRecipeRating = action.payload.averageRecipeRating;
       })
       .addCase(fetchReviewsGiven.pending, (state) => {
         state.reviewsGiven.loading = true;
@@ -251,7 +268,7 @@ const profileSlice = createSlice({
         state.reviewsReceived.loading = false;
         state.reviewsReceived.reviews = action.payload.reviews;
         state.reviewsReceived.meta = action.payload.meta;
-      })
+      });
   },
 });
 

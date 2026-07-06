@@ -11,16 +11,18 @@ import {
   FaTimes,
   FaUsers,
 } from "react-icons/fa";
+import { useSelector } from "react-redux";
 
-function ProfileStats({ profileData }) {
+export default function ProfileStats() {
   const [activeItem, setActiveItem] = useState(null);
+  const {userProfile, favourites} = useSelector((state) => state.profile);
 
   const statItems = [
     {
       id: "favourites",
       icon: FaHeart,
       label: "Favorites",
-      value: profileData?.favourites?.length ?? 0,
+      value: favourites?.length ?? 0,
       iconColor: "text-rose-500",
       iconBg: "bg-rose-50",
     },
@@ -28,15 +30,15 @@ function ProfileStats({ profileData }) {
       id: "subscribed",
       icon: FaUsers,
       label: "Subscribed",
-      value: profileData?.profile?.subscribed?.length ?? 0,
+      value: userProfile?.subscribed?.length ?? 0,
       iconColor: "text-blue-500",
       iconBg: "bg-blue-50",
     },
     {
       id: "reviews",
       icon: FaStar,
-      label: "Reviews",
-      value: profileData?.reviewsGiven?.length ?? 0,
+      label: "Reviews Given",
+      value: userProfile?.reviewsGiven?.length ?? 0,
       iconColor: "text-yellow-500",
       iconBg: "bg-yellow-50",
     },
@@ -44,7 +46,7 @@ function ProfileStats({ profileData }) {
       id: "cuisine",
       icon: FaGlobe,
       label: "Favourite Cuisine",
-      value: profileData?.profile?.cuisine.toUpperCase() || "N/A",
+      value: userProfile?.cuisine.toUpperCase() || "N/A",
       iconColor: "text-purple-500",
       iconBg: "bg-purple-50",
     },
@@ -52,26 +54,26 @@ function ProfileStats({ profileData }) {
       id: "dietary",
       icon: FaSeedling,
       label: "Dietary",
-      value: profileData?.profile?.dietaryLabels?.length ?? 0,
+      value: userProfile?.dietaryLabels?.length ?? 0,
       iconColor: "text-emerald-500",
       iconBg: "bg-emerald-50",
       hasList: true,
       details:
-        profileData?.profile?.dietaryLabels?.length > 0
-          ? profileData.profile.dietaryLabels
+        userProfile?.dietaryLabels?.length > 0
+          ? userProfile?.dietaryLabels
           : ["No dietary preferences"],
     },
     {
       id: "allergens",
       icon: FaAllergies,
       label: "Allergens",
-      value: profileData?.profile?.allergens?.length ?? 0,
+      value: userProfile?.allergens?.length ?? 0,
       iconColor: "text-red-500",
       iconBg: "bg-red-50",
       hasList: true,
       details:
-        profileData?.profile?.allergens?.length > 0
-          ? profileData.profile.allergens
+        userProfile?.allergens?.length > 0
+          ? userProfile?.allergens
           : ["No allergens listed"],
     },
   ];
@@ -193,5 +195,3 @@ function ProfileStats({ profileData }) {
     </div>
   );
 }
-
-export default ProfileStats;

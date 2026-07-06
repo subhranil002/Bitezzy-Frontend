@@ -2,19 +2,18 @@ import { AiOutlineClose } from "react-icons/ai";
 import { FaRupeeSign, FaStar, FaUsers, FaUtensils } from "react-icons/fa";
 
 function ConfirmSubscriptionDialog({
-  profileData,
+  userProfile,
+  chefProfile,
+  recipeCount,
   averageRecipeRating,
+  subscriberCount,
   onConfirm,
-  loading,
 }) {
-  const chefName = profileData?.profile?.name || "-";
-  const speciality = profileData?.chefProfile?.speciality || "-";
-  const avatarUrl = profileData?.profile?.avatar?.secure_url || "";
-  const price = Number(profileData?.chefProfile?.subscriptionPrice || 0);
-
-  const recipeCount = profileData?.recipes?.length || 0;
-  const subscriberCount = profileData?.chefProfile?.subscribers?.length || 0;
-  const experienceCount = profileData?.chefProfile?.experience?.length || 0;
+  const chefName = userProfile?.name || "-";
+  const speciality = chefProfile?.speciality || "-";
+  const avatarUrl = userProfile?.avatar?.secure_url || "";
+  const price = Number(chefProfile?.subscriptionPrice || 0);
+  const experienceCount = chefProfile?.experience?.length || 0;
 
   function modifyCloudinaryURL(url) {
     if (url === "" || url === null) return "";
@@ -27,7 +26,7 @@ function ConfirmSubscriptionDialog({
     return url;
   }
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     document.getElementById("confirm-subscription")?.close();
     onConfirm();
   };
@@ -135,7 +134,7 @@ function ConfirmSubscriptionDialog({
             <div className="rounded-2xl border border-orange-100 bg-orange-50 p-3 text-center">
               <div className="flex items-center justify-center gap-1 text-amber-400 font-bold">
                 <FaStar />
-                <span>{profileData.chefProfile.averageRating || "—"}</span>
+                <span>{chefProfile.averageRating || "—"}</span>
               </div>
               <p className="text-xs text-gray-500 mt-1 font-medium">
                 Chef Rating
@@ -202,14 +201,11 @@ function ConfirmSubscriptionDialog({
             <button
               type="button"
               onClick={handleConfirm}
-              disabled={loading}
-              className={`btn w-1/2 border-none text-white shadow-lg rounded-xl gap-2 ${
-                loading
-                  ? "bg-gray-300 cursor-not-allowed text-gray-500 shadow-none"
-                  : "bg-linear-to-r from-orange-500 to-red-500 hover:shadow-orange-200 hover:-translate-y-0.5"
-              }`}
+              className={
+                "btn w-1/2 border-none text-white shadow-lg rounded-xl bg-linear-to-r from-orange-500 to-red-500 hover:shadow-orange-200 hover:-translate-y-0.5"
+              }
             >
-              {loading ? "Processing..." : "Confirm & Subscribe"}
+              {"Confirm & Subscribe"}
             </button>
           </div>
         </div>

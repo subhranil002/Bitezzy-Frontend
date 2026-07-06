@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FaBriefcase,
   FaCalendarAlt,
@@ -18,47 +18,54 @@ import { useDispatch, useSelector } from "react-redux";
 import createSubscriptionApi from "../../apis/user/createSubscriptionApi";
 import ChefReviews from "../../components/chefProfile/ChefReviews";
 import ConfirmSubscriptionDialog from "../../components/chefProfile/ConfirmSubscriptionDialog";
-import EditChefProfileDialog from "../../components/chefProfile/editChefProfileDialog";
 import RecipeCard from "../../components/recipe/RecipeCard";
-import ChangePasswordDialog from "../../components/userProfile/ChangePasswordDialog";
 import ProfileStats from "../../components/userProfile/ProfileStats";
 import ProfileTabs from "../../components/userProfile/ProfileTabs";
 import HomeLayout from "../../layouts/HomeLayout";
 import { getProfile } from "../../redux/slices/authSlice";
+import { fetchRecipesByChef } from "../../redux/slices/profileSlice";
 
-function ChefProfile({ profileData }) {
-  const { userData } = useSelector((state) => state.auth);
-  const isOwnProfile = userData?._id.toString() === profileData?._id.toString();
+function ChefProfile() {
+  const userData = useSelector((state) => state.auth.userData);
+  const {
+    _id,
+    userProfile,
+    isOwnProfile,
+    subscribed,
+    subscribers,
+    averageRecipeRating,
+    chefProfile,
+    recipes,
+    recipesLoading,
+    profileCreatedAt,
+  } = useSelector((state) => state.profile);
   const dispatch = useDispatch();
-  const [subscribed, setSubscribed] = useState(
-    userData?.profile?.subscribed?.some(
-      (id) => id.toString() === profileData._id.toString(),
-    ),
+  const [isSubscribed, setIsSubscribed] = useState(
+    subscribed?.some((id) => id.toString() === userData?._id.toString()),
   );
   const [subscribeLoading, setsubscribeLoading] = useState(false);
 
   const subscribe = async () => {
     setsubscribeLoading(true);
-    if (!subscribed) {
+    if (!isSubscribed) {
       const subscription = await createSubscriptionApi({
-        chefId: profileData._id,
+        chefId: _id,
       });
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY,
         subscription_id: subscription.data.id,
         name: "Bitezzy",
-        description: `Subscription to ${profileData.profile.name}`,
+        description: `Subscription to ${userProfile.name}`,
         theme: {
           color: "#f97316",
         },
         prefill: {
-          name: userData.profile.name,
-          email: userData.email,
+          name: userProfile.name,
           contact: "+91",
         },
         handler: async function () {
-          setSubscribed(true);
+          setIsSubscribed(true);
           dispatch(getProfile());
         },
       };
@@ -69,41 +76,22 @@ function ChefProfile({ profileData }) {
     setsubscribeLoading(false);
   };
 
-  const getAverageRecipeRating = () => {
-    const recipes = profileData?.chefProfile?.recipes;
-
-    if (!recipes || recipes.length === 0) {
-      return "0.0";
-    }
-
-    const ratedRecipes = recipes.filter(
-      (recipe) => Number(recipe.averageRating) > 0,
-    );
-
-    const total = ratedRecipes.reduce(
-      (sum, recipe) => sum + Number(recipe.averageRating),
-      0,
-    );
-
-    return (total / ratedRecipes.length).toFixed(1);
-  };
-
   const stats = [
     {
       label: "Subscribers",
-      value: profileData?.chefProfile?.subscribers?.length || 0,
+      value: subscribers?.length || 0,
     },
     {
       label: "Recipes",
-      value: profileData?.chefProfile?.recipes?.length || 0,
+      value: recipes?.length || 0,
     },
     {
       label: "Chef Rating",
-      value: profileData?.chefProfile?.averageRating,
+      value: chefProfile?.averageRating,
     },
     {
       label: "Recipe Rating",
-      value: getAverageRecipeRating(),
+      value: averageRecipeRating,
     },
   ];
 
@@ -118,18 +106,22 @@ function ChefProfile({ profileData }) {
     return url;
   }
 
+  useEffect(() => {
+    dispatch(fetchRecipesByChef(_id));
+  }, []);
+
   return (
     <>
-      {isOwnProfile && (
+      {/* {isOwnProfile && (
         <>
-          <EditChefProfileDialog profileData={userData} />
-          <ChangePasswordDialog />
         </>
-      )}
+      )} */}
       <ConfirmSubscriptionDialog
-        profileData={profileData}
-        averageRecipeRating={getAverageRecipeRating()}
-        loading={subscribeLoading}
+        userProfile={userProfile}
+        chefProfile={chefProfile}
+        recipeCount={recipes?.length}
+        averageRecipeRating={averageRecipeRating}
+        subscriberCount={subscribers?.length}
         onConfirm={subscribe}
       />
       <HomeLayout>
@@ -148,16 +140,16 @@ function ChefProfile({ profileData }) {
               <div className="absolute -bottom-16 left-6 sm:left-12">
                 <div className="avatar">
                   <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full ring-4 ring-orange-200 ring-offset-2">
-                    {profileData?.profile?.avatar ? (
+                    {userProfile?.avatar ? (
                       <img
                         alt="Profile Avatar"
                         src={modifyCloudinaryURL(
-                          profileData?.profile?.avatar?.secure_url || "",
+                          userProfile?.avatar?.secure_url || "",
                         )}
                       />
                     ) : (
                       <div className="bg-orange-100 flex items-center justify-center text-2xl font-semibold text-orange-500">
-                        {profileData?.profile?.name?.charAt(0)}
+                        {userProfile?.name?.charAt(0)}
                       </div>
                     )}
                   </div>
@@ -171,10 +163,10 @@ function ChefProfile({ profileData }) {
                 {/* Name & Bio */}
                 <div>
                   <h1 className="text-3xl sm:text-4xl font-extrabold bg-linear-to-r from-orange-400 via-red-400 to-amber-400 bg-clip-text text-transparent">
-                    {profileData?.profile?.name}
+                    {userProfile?.name}
                   </h1>
                   <p className="text-gray-600 text-lg leading-relaxed">
-                    {profileData?.profile?.bio || "No bio available."}
+                    {userProfile?.bio || "No bio available."}
                   </p>
                 </div>
 
@@ -187,34 +179,32 @@ function ChefProfile({ profileData }) {
                     <div className="badge badge-lg h-auto py-2 px-4 gap-2 bg-orange-50 border-orange-200 text-orange-700 shadow-sm rounded-xl">
                       <FaUtensils className="w-3 h-3" />
                       <span className="font-bold text-base uppercase">
-                        {profileData?.chefProfile?.speciality || "-"}
+                        {chefProfile?.speciality || "-"}
                       </span>
                     </div>
                   </div>
 
                   {/* External Links */}
-                  {profileData?.chefProfile?.externalLinks?.length > 0 && (
+                  {chefProfile?.externalLinks?.length > 0 && (
                     <div className="flex flex-col gap-1.5">
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
                         <FaLink /> Connect
                       </span>
                       <div className="flex flex-wrap gap-2">
-                        {profileData.chefProfile.externalLinks.map(
-                          (link, index) => (
-                            <a
-                              key={index}
-                              href={link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="badge badge-lg h-auto py-2 px-3 gap-2 bg-white border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-600 transition-colors shadow-sm cursor-pointer rounded-xl"
-                            >
-                              <FaGlobe className="w-3 h-3" />
-                              <span className="font-medium text-sm">
-                                {new URL(link).hostname.replace("www.", "")}
-                              </span>
-                            </a>
-                          ),
-                        )}
+                        {chefProfile.externalLinks.map((link, index) => (
+                          <a
+                            key={index}
+                            href={link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="badge badge-lg h-auto py-2 px-3 gap-2 bg-white border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-600 transition-colors shadow-sm cursor-pointer rounded-xl"
+                          >
+                            <FaGlobe className="w-3 h-3" />
+                            <span className="font-medium text-sm">
+                              {new URL(link).hostname.replace("www.", "")}
+                            </span>
+                          </a>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -228,7 +218,7 @@ function ChefProfile({ profileData }) {
                     </div>
                     <span>
                       Joined{" "}
-                      {new Date(profileData.createdAt).toLocaleDateString(
+                      {new Date(profileCreatedAt).toLocaleDateString(
                         "en-IN",
                         {
                           month: "long",
@@ -244,7 +234,7 @@ function ChefProfile({ profileData }) {
                     </div>
                     <span>
                       <strong className="text-gray-800">
-                        {profileData?.chefProfile?.subscribers?.length || 0}
+                        {chefProfile?.subscribers?.length || 0}
                       </strong>{" "}
                       Subscribers
                     </span>
@@ -260,7 +250,7 @@ function ChefProfile({ profileData }) {
                     </span>
                     <div className="badge badge-lg bg-orange-50 border-orange-200 text-orange-700">
                       <FaRupeeSign className="w-3 h-3" />
-                      {profileData?.chefProfile?.subscriptionPrice || 0} / month
+                      {chefProfile?.subscriptionPrice || 0} / month
                     </div>
                   </div>
                 )}
@@ -296,27 +286,27 @@ function ChefProfile({ profileData }) {
                 ) : (
                   <button
                     onClick={() =>
-                      !subscribed &&
+                      !isSubscribed &&
                       document
                         .getElementById("confirm-subscription")
                         ?.showModal()
                     }
                     disabled={subscribeLoading}
                     className={`btn gap-2 ${
-                      subscribed
+                      isSubscribed
                         ? "btn-outline border-orange-400 text-orange-600 hover:bg-orange-50"
                         : "bg-linear-to-r from-orange-400 to-red-500 text-white border-none"
                     }`}
                   >
                     <FaHeart
                       className={
-                        subscribed
+                        isSubscribed
                           ? "text-rose-500 w-5 h-5"
                           : "text-white w-5 h-5"
                       }
                     />
 
-                    {subscribed ? "Subscribed" : "Subscribe"}
+                    {isSubscribed ? "Subscribed" : "Subscribe"}
                   </button>
                 )}
               </div>
@@ -339,8 +329,8 @@ function ChefProfile({ profileData }) {
             </div>
 
             {/* Professional Background */}
-            {(profileData?.chefProfile?.education?.length > 0 ||
-              profileData?.chefProfile?.experience?.length > 0) && (
+            {(chefProfile?.education?.length > 0 ||
+              chefProfile?.experience?.length > 0) && (
               <div className="card bg-white shadow-xl border border-orange-100 overflow-hidden mb-10">
                 <div className="h-1.5 bg-linear-to-r from-orange-400 via-red-400 to-amber-400"></div>
 
@@ -354,7 +344,7 @@ function ChefProfile({ profileData }) {
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     {/* Education */}
-                    {profileData?.chefProfile?.education?.length > 0 && (
+                    {chefProfile?.education?.length > 0 && (
                       <div>
                         <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-orange-500 mb-5">
                           <FaGraduationCap />
@@ -362,7 +352,7 @@ function ChefProfile({ profileData }) {
                         </h4>
 
                         <div className="space-y-5">
-                          {profileData.chefProfile.education.map((edu) => (
+                          {chefProfile.education.map((edu) => (
                             <div
                               key={edu._id}
                               className="relative pl-5 border-l-2 border-orange-200"
@@ -399,7 +389,7 @@ function ChefProfile({ profileData }) {
                     )}
 
                     {/* Experience */}
-                    {profileData?.chefProfile?.experience?.length > 0 && (
+                    {chefProfile?.experience?.length > 0 && (
                       <div>
                         <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-amber-500 mb-5">
                           <FaBriefcase />
@@ -407,7 +397,7 @@ function ChefProfile({ profileData }) {
                         </h4>
 
                         <div className="space-y-5">
-                          {profileData.chefProfile.experience.map((exp) => (
+                          {chefProfile.experience.map((exp) => (
                             <div
                               key={exp._id}
                               className="relative pl-5 border-l-2 border-amber-200"
@@ -457,16 +447,22 @@ function ChefProfile({ profileData }) {
               <div className="card-body p-0">
                 <h3 className="card-title text-gray-800 pt-5 pl-5">
                   <FaUtensils className="text-orange-500" />
-                  Recipes by {profileData?.profile?.name}
+                  Recipes by {userProfile?.name}
                 </h3>
-                {profileData?.chefProfile?.recipes?.length ? (
+
+                {recipesLoading ? (
+                  <div className="text-center py-16">
+                    <div className="loading loading-spinner loading-lg text-orange-500 mx-auto mb-4"></div>
+                    <p className="text-gray-500">Loading recipes...</p>
+                  </div>
+                ) : recipes?.length ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {profileData?.chefProfile?.recipes.map((recipe, idx) => (
-                      <div className="flex justify-center" key={idx}>
-                        <RecipeCard
-                          key={recipe?._id.toString()}
-                          recipe={recipe}
-                        />
+                    {recipes.map((recipe) => (
+                      <div
+                        className="flex justify-center"
+                        key={recipe?._id.toString()}
+                      >
+                        <RecipeCard recipe={recipe} />
                       </div>
                     ))}
                   </div>
@@ -479,23 +475,20 @@ function ChefProfile({ profileData }) {
             </div>
 
             {/* Reviews Section */}
-            <ChefReviews
-              chefId={profileData?._id}
-              modifyCloudinaryURL={modifyCloudinaryURL}
-            />
+            <ChefReviews />
 
             {/* Only visible to the chef themselves */}
             {isOwnProfile && (
               <>
                 <div className="card glass border mt-8 border-orange-100 shadow-md hover:shadow-orange-300/60 mb-8">
                   <div className="card-body">
-                    <ProfileStats profileData={profileData} />
+                    <ProfileStats />
                   </div>
                 </div>
 
                 <div className="card glass border border-orange-100 shadow-md hover:shadow-orange-300/60 mb-8">
                   <div className="card-body">
-                    <ProfileTabs profileData={profileData} />
+                    <ProfileTabs />
                   </div>
                 </div>
               </>

@@ -1,63 +1,30 @@
 import { useEffect, useState } from "react";
 import { FaArrowRight, FaSearch, FaStar } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import getAllChefReviewsApi from "../../apis/user/getAllChefReviewsApi";
+import { fetchReviewsReceived } from "../../redux/slices/profileSlice";
 
-function ChefReviews({ chefId, modifyCloudinaryURL }) {
+function ChefReviews() {
   const navigate = useNavigate();
-
+  const { _id, reviewsReceived } = useSelector((state) => state.profile);
+  const dispatch = useDispatch();
   const [reviewPage, setReviewPage] = useState(1);
-  const [reviews, setReviews] = useState([]);
-  const [reviewsMeta, setReviewsMeta] = useState({
-    page: 1,
-    limit: 4,
-    totalPages: 0,
-    averageRating: 0,
-    totalReviews: 0,
-  });
-
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!chefId) return;
+    dispatch(fetchReviewsReceived({ userId: _id, page: reviewPage, limit: 4 }));
+  }, [reviewPage]);
 
-    const fetchReviews = async () => {
-      try {
-        setLoading(true);
-
-        const response = await getAllChefReviewsApi(chefId, reviewPage, 4);
-
-        setReviews(response?.data?.reviews || []);
-
-        setReviewsMeta(
-          response?.data?.meta || {
-            page: reviewPage,
-            limit: 4,
-            totalPages: 0,
-            averageRating: 0,
-            totalReviews: 0,
-          },
-        );
-      } catch (error) {
-        console.error("Failed to fetch chef reviews:", error);
-
-        setReviews([]);
-
-        setReviewsMeta({
-          page: reviewPage,
-          limit: 4,
-          totalPages: 0,
-          averageRating: 0,
-          totalReviews: 0,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReviews();
-  }, [chefId, reviewPage]);
+  function modifyCloudinaryURL(url) {
+    if (!url) return "";
+    if (import.meta.env.VITE_IMAGE_TRANSFORMATION === "true") {
+      return url.replace(
+        "/upload/",
+        "/upload/ar_1:1,c_auto,g_auto,w_500/r_max/",
+      );
+    }
+    return url;
+  }
 
   return (
     <div className="card bg-white shadow-xl border border-orange-100 mt-10 overflow-hidden">
@@ -72,15 +39,15 @@ function ChefReviews({ chefId, modifyCloudinaryURL }) {
           <div>
             <p>What People Say</p>
 
-            {reviewsMeta.totalReviews > 0 && (
+            {reviewsReceived?.meta?.totalReviews > 0 && (
               <p className="text-sm font-normal text-gray-500 mt-1">
-                {reviewsMeta.totalReviews} Reviews
+                {reviewsReceived.meta.totalReviews} Reviews
               </p>
             )}
           </div>
         </h3>
 
-        {loading ? (
+        {reviewsReceived.loading ? (
           <div className="card bg-base-100 shadow-xl border border-orange-100">
             <div className="card-body text-center py-16">
               <div className="loading loading-spinner loading-lg text-orange-500 mx-auto mb-4"></div>
@@ -88,10 +55,10 @@ function ChefReviews({ chefId, modifyCloudinaryURL }) {
               <p className="text-gray-500">Loading reviews...</p>
             </div>
           </div>
-        ) : reviews.length > 0 ? (
+        ) : reviewsReceived.reviews.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {reviews.map((review) => (
+              {reviewsReceived.reviews.map((review) => (
                 <div
                   key={review._id}
                   className="card bg-base-100 shadow-lg border border-orange-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
@@ -178,7 +145,7 @@ function ChefReviews({ chefId, modifyCloudinaryURL }) {
               ))}
             </div>
 
-            {reviewsMeta.totalPages > 1 && (
+            {reviewsReceived.meta.totalPages > 1 && (
               <div className="flex justify-between items-center mt-6 pt-4">
                 <button
                   disabled={reviewPage === 1}
@@ -189,11 +156,12 @@ function ChefReviews({ chefId, modifyCloudinaryURL }) {
                 </button>
 
                 <span className="text-sm font-semibold text-gray-600">
-                  Page {reviewsMeta.page} of {reviewsMeta.totalPages}
+                  Page {reviewsReceived.meta.page} of{" "}
+                  {reviewsReceived.meta.totalPages}
                 </span>
 
                 <button
-                  disabled={reviewPage === reviewsMeta.totalPages}
+                  disabled={reviewPage === reviewsReceived.meta.totalPages}
                   onClick={() => setReviewPage((prev) => prev + 1)}
                   className="btn btn-sm btn-outline border-orange-200 text-orange-600 hover:bg-orange-50 disabled:opacity-50 rounded-xl px-4 py-2"
                 >

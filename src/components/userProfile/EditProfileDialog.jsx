@@ -1,6 +1,4 @@
-// Finalized
-
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { AiOutlineClose } from "react-icons/ai";
 import {
@@ -52,24 +50,14 @@ function Chip({ color, children, onRemove }) {
   );
 }
 
-/**
- * Dialog component for editing a user's profile.
- */
 export default function EditProfileDialog() {
-  // Reference to dialog element for manual open/close control
   const dlgRef = useRef(null);
-
   const dispatch = useDispatch();
-  const profile = useSelector((state) => state.auth.userData?.profile);
-
-  // Local state for avatar preview and draft selections
+  const profile = useSelector((state) => state.profile.userProfile);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [dietaryDraft, setDietaryDraft] = useState("");
   const [allergenDraft, setAllergenDraft] = useState("");
 
-  /**
-   * react-hook-form setup
-   */
   const {
     register,
     handleSubmit,
@@ -100,7 +88,6 @@ export default function EditProfileDialog() {
     control,
     name: "dietaryLabels",
   });
-
   const {
     fields: allergenFields,
     append: appendAllergen,
@@ -130,21 +117,12 @@ export default function EditProfileDialog() {
     return () => URL.revokeObjectURL(url);
   }, [watchedFileList]);
 
-  /**
-   * Computes avatar display URL.
-   * Priority:
-   * 1. Local preview (new upload)
-   * 2. Existing profile avatar
-   */
-  const avatarUrl = useMemo(() => {
+  const avatarUrl = () => {
     if (previewUrl) return previewUrl;
-
     const url = profile?.avatar?.secure_url;
-
     if (!url) return null;
-
     return url.replace("/upload/", "/upload/ar_1:1,c_auto,g_auto,w_500/r_max/");
-  }, [previewUrl, profile]);
+  };
 
   /**
    * Ensures only unique items are added to a field array.
@@ -177,10 +155,9 @@ export default function EditProfileDialog() {
    * Handles form submission.
    */
   const onSubmit = async (data) => {
-    // Close dialog immediately
     dlgRef.current?.close();
 
-    await dispatch(
+    dispatch(
       updateProfile({
         ...data,
         dietaryLabels: data.dietaryLabels.map((i) => i.value?.toLowerCase()),
@@ -188,7 +165,6 @@ export default function EditProfileDialog() {
       }),
     ).unwrap();
 
-    // Reset form with latest saved data
     reset(data);
   };
 
@@ -230,9 +206,9 @@ export default function EditProfileDialog() {
               <div className="flex flex-col items-center gap-3 w-full sm:w-auto">
                 <div className="relative group">
                   <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-orange-50 ring-2 ring-orange-100">
-                    {avatarUrl ? (
+                    {avatarUrl() ? (
                       <img
-                        src={avatarUrl}
+                        src={avatarUrl()}
                         alt="Avatar"
                         className="object-cover w-full h-full"
                       />

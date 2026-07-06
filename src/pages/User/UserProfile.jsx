@@ -7,8 +7,10 @@ import ProfileStats from "../../components/userProfile/ProfileStats";
 import ProfileTabs from "../../components/userProfile/ProfileTabs";
 import HomeLayout from "../../layouts/HomeLayout";
 
-function UserProfile({ profileData }) {
-  const { userData } = useSelector((state) => state.auth);
+function UserProfile() {
+  const { isOwnProfile, userProfile, profileCreatedAt } = useSelector(
+    (state) => state.profile,
+  );
 
   function modifyCloudinaryURL(url) {
     if (url === "" || url === null) return "";
@@ -21,13 +23,11 @@ function UserProfile({ profileData }) {
     return url;
   }
 
-  const isOwnProfile = userData?._id.toString() === profileData?._id.toString();
-
   return (
     <>
       {isOwnProfile && (
         <>
-          <EditProfileDialog profileData={userData} />
+          <EditProfileDialog />
           <ChangePasswordDialog />
         </>
       )}
@@ -46,16 +46,16 @@ function UserProfile({ profileData }) {
                 {/* Avatar */}
                 <div className="avatar">
                   <div className="w-28 sm:w-32 ring ring-orange-200 ring-offset-base-100 ring-offset-2 rounded-full shadow-lg">
-                    {profileData?.profile?.avatar ? (
+                    {userProfile?.avatar ? (
                       <img
                         alt="Profile Avatar"
                         src={modifyCloudinaryURL(
-                          profileData?.profile?.avatar?.secure_url || "",
+                          userProfile?.avatar?.secure_url || "",
                         )}
                       />
                     ) : (
                       <div className="bg-orange-100 flex items-center justify-center text-2xl font-semibold text-orange-500">
-                        {profileData?.profile?.name?.charAt(0)}
+                        {userProfile?.name?.charAt(0)}
                       </div>
                     )}
                   </div>
@@ -66,10 +66,10 @@ function UserProfile({ profileData }) {
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
                       <h1 className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-orange-400 via-red-400 to-amber-400 bg-clip-text text-transparent">
-                        {profileData?.profile?.name}
+                        {userProfile?.name}
                       </h1>
                       <p className="text-gray-600 mt-2 text-base sm:text-lg">
-                        {profileData?.profile?.bio}
+                        {userProfile?.bio}
                       </p>
 
                       <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
@@ -77,7 +77,7 @@ function UserProfile({ profileData }) {
                           <FaCalendarAlt className="w-4 h-4 text-orange-400" />
                           <span>
                             Joined{" "}
-                            {new Date(profileData.createdAt).toLocaleDateString(
+                            {new Date(profileCreatedAt).toLocaleDateString(
                               "en-IN",
                               {
                                 month: "long",
@@ -128,7 +128,7 @@ function UserProfile({ profileData }) {
             {/* 📊 Profile Stats */}
             <div className="card glass border border-orange-100 shadow-md hover:shadow-orange-300/60">
               <div className="card-body">
-                <ProfileStats profileData={profileData} />
+                <ProfileStats />
               </div>
             </div>
 
@@ -136,7 +136,7 @@ function UserProfile({ profileData }) {
             {isOwnProfile && (
               <div className="card glass border border-orange-100 shadow-md hover:shadow-orange-300/60">
                 <div className="card-body">
-                  <ProfileTabs profileData={profileData} />
+                  <ProfileTabs />
                 </div>
               </div>
             )}
